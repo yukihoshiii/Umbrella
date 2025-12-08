@@ -3,7 +3,11 @@
 #include <sstream>
 #include <string>
 #include <cstdlib>
+#ifdef __APPLE__
 #include <mach-o/dyld.h>
+#else
+#include <unistd.h>
+#endif
 #include <limits.h>
 #include "compiler/lexer.h"
 #include "compiler/parser.h"
@@ -11,10 +15,18 @@
 using namespace umbrella;
 std::string getExecutablePath() {
     char path[PATH_MAX];
+#ifdef __APPLE__
     uint32_t size = sizeof(path);
     if (_NSGetExecutablePath(path, &size) == 0) {
         return std::string(path);
     }
+#else
+    ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
+    if (count != -1) {
+        path[count] = '\0';
+        return std::string(path);
+    }
+#endif
     return "";
 }
 std::string readFile(const std::string& filename) {

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <chrono>
 #include <memory>
+#include <algorithm>
 namespace umbrella {
 namespace runtime {
 void print(const std::string& message);
