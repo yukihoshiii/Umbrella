@@ -1,0 +1,35 @@
+function main(): number {
+    let userScores: Map<string, number> = new Map();
+    userScores.set("Alice", 100);
+    userScores.set("Bob", 85);
+    userScores.set("Charlie", 92);
+    println("Alice's score: " + toString(userScores.get("Alice")));
+    println("Map size: " + toString(userScores.size()));
+    if (userScores.has("Bob")) {
+        println("Bob is in the map");
+    }
+    let keys: Array<string> = userScores.keys();
+    println("All users: " + keys.join(", "));
+    let now: number = Date.now();
+    println("Current timestamp: " + toString(now));
+    let isoDate: string = Date.toISOString(now);
+    println("ISO date: " + isoDate);
+    let dateStr: string = Date.toDateString(now);
+    println("Date: " + dateStr);
+    let timeStr: string = Date.toTimeString(now);
+    println("Time: " + timeStr);
+    let text: string = "  Hello, World!  ";
+    let trimmed: string = String.trim(text);
+    println("Trimmed: '" + trimmed + "'");
+    let repeated: string = String.repeat("Ha", 3);
+    println("Repeated: " + repeated);   
+    let padded: string = String.padStart("42", 5, "0");
+    println("Padded: " + padded);   
+    if (String.startsWith("Hello", "He")) {
+        println("Starts with 'He'");
+    }
+    if (String.endsWith("World", "ld")) {
+        println("Ends with 'ld'");
+    }
+    return 0;
+}

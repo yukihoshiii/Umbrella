@@ -1,0 +1,8 @@
+function main(): number {
+    let x: number = 10;
+    let y: number = 20;
+    let sum: number = x + y;
+    println("Sum:");
+    println(toString(sum));
+    return 0;
+}

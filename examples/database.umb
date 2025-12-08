@@ -1,0 +1,27 @@
+function main(): number {
+    let db: Database = new Database("users.db");
+    db.exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, email TEXT, age INTEGER)");
+    db.exec("INSERT INTO users (name, email, age) VALUES ('Alice', 'alice@example.com', 25)");
+    db.exec("INSERT INTO users (name, email, age) VALUES ('Bob', 'bob@example.com', 30)");
+    db.exec("INSERT INTO users (name, email, age) VALUES ('Charlie', 'charlie@example.com', 35)");
+    println("Inserted " + toString(db.changes()) + " rows");
+    println("Last insert ID: " + toString(db.lastInsertId()));
+    let results: Array<Row> = db.query("SELECT * FROM users WHERE age > 25");
+    println("\\nUsers older than 25:");
+    for (let i: number = 0; i < results.length; i = i + 1) {
+        let row: Row = results[i];
+        println("  " + row.get("name") + " (" + row.get("age") + ")");
+    }
+    db.beginTransaction();
+    try {
+        db.exec("UPDATE users SET age = age + 1 WHERE name = 'Alice'");
+        db.exec("UPDATE users SET age = age + 1 WHERE name = 'Bob'");
+        db.commit();
+        println("\\nTransaction committed");
+    } catch (error) {
+        db.rollback();
+        println("Transaction rolled back: " + error);
+    }
+    db.close();
+    return 0;
+}

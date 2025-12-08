@@ -1,0 +1,5 @@
+function main(): number {
+    println("Hello, World!");
+    println("Welcome to Umbrella Programming Language! 🌂");
+    return 0;
+}

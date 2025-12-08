@@ -1,0 +1,52 @@
+function fetchAndParse(url: string): void {
+    Console.info("Fetching: " + url);
+    let response: HTTPResponse = HTTP.get(url);
+    if (response.statusCode == 200) {
+        Console.log("✓ Success (Status: " + toString(response.statusCode) + ")");
+        let emailPattern: Regex = new Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+        let emails: Array<string> = emailPattern.findAll(response.body);
+        if (emails.length > 0) {
+            Console.info("Found " + toString(emails.length) + " email(s):");
+            for (let i: number = 0; i < emails.length; i = i + 1) {
+                println("  - " + emails[i]);
+            }
+        }
+        let urlPattern: Regex = new Regex("https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}[/a-zA-Z0-9._-]*");
+        let urls: Array<string> = urlPattern.findAll(response.body);
+        Console.info("Found " + toString(urls.length) + " URL(s)");
+        let db: Database = new Database("scraper.db");
+        db.exec("CREATE TABLE IF NOT EXISTS pages (url TEXT, emails TEXT, timestamp INTEGER)");
+        let emailsStr: string = emails.join(",");
+        let timestamp: number = Date.now();
+        db.exec("INSERT INTO pages VALUES ('" + url + "', '" + emailsStr + "', " + toString(timestamp) + ")");
+        Console.log("Saved to database");
+        db.close();
+        let filename: string = "page_" + toString(timestamp) + ".html";
+        File.writeFile(filename, response.body);
+        Console.log("Saved to: " + filename);
+    } else {
+        Console.error("Failed (Status: " + toString(response.statusCode) + ")");
+    }
+}
+function main(): number {
+    println(String.repeat("=", 60));
+    println("  Advanced Web Scraper - Umbrella Language");
+    println(String.repeat("=", 60));
+    let urls: Array<string> = [
+        "https://api.github.com",
+        "https://httpbin.org/html"
+    ];
+    let threads: Array<Thread> = [];
+    for (let i: number = 0; i < urls.length; i = i + 1) {
+        let url: string = urls[i];
+        let thread: Thread = Thread.spawn(() => fetchAndParse(url));
+        threads.push(thread);
+    }
+    for (let i: number = 0; i < threads.length; i = i + 1) {
+        threads[i].join();
+    }
+    println("\\n" + String.repeat("=", 60));
+    println("  Scraping completed!");
+    println(String.repeat("=", 60));
+    return 0;
+}

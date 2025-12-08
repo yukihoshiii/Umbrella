@@ -1,0 +1,19 @@
+function divide(a: number, b: number): number {
+    if (b == 0) {
+        throw "Division by zero error";
+    }
+    return a / b;
+}
+function main(): number {
+    try {
+        let result: number = divide(10, 2);
+        println("10 / 2 = " + toString(result));
+        let badResult: number = divide(10, 0);
+        println("This won't print");
+    } catch (error) {
+        println("Caught error: " + error);
+    } finally {
+        println("Cleanup code runs always");
+    }
+    return 0;
+}

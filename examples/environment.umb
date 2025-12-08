@@ -1,0 +1,21 @@
+function main(): number {
+    let path: string = Env.get("PATH");
+    println("PATH length: " + toString(String.length(path)));
+    let home: string = Env.home();
+    println("Home directory: " + home);
+    let cwd: string = Env.cwd();
+    println("Current directory: " + cwd);
+    Env.set("MY_APP_NAME", "Umbrella");
+    Env.set("MY_APP_VERSION", "1.0.0");
+    if (Env.has("MY_APP_NAME")) {
+        let appName: string = Env.get("MY_APP_NAME");
+        println("\\nApp name: " + appName);
+    }
+    let dbUrl: string = Env.get("DATABASE_URL", "sqlite://local.db");
+    println("Database URL: " + dbUrl);
+    let user: string = Env.get("USER", "unknown");
+    println("User: " + user);
+    let shell: string = Env.get("SHELL", "unknown");
+    println("Shell: " + shell);
+    return 0;
+}

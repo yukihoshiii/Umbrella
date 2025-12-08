@@ -1,0 +1,17 @@
+function main(): number {
+    let numbers: Array<number> = [1, 2, 3, 4, 5];
+    println("Array elements:");
+    let i: number = 0;
+    while (i < 5) {
+        println("numbers[" + toString(i) + "] = " + toString(numbers[i]));
+        i = i + 1;
+    }
+    numbers.push(6);
+    println("After push: length = " + toString(numbers.length));
+    let sum: number = 0;
+    for (let j: number = 0; j < numbers.length; j = j + 1) {
+        sum = sum + numbers[j];
+    }
+    println("Sum of all elements: " + toString(sum));
+    return 0;
+}

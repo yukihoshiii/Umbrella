@@ -1,0 +1,22 @@
+function main(): number {
+    let x: number = 42;
+    let y: number = 3.14;
+    let sum: number = x + y;
+    println("x = " + toString(x));
+    println("y = " + toString(y));
+    println("sum = " + toString(sum));
+    let isTrue: boolean = true;
+    let isFalse: boolean = false;
+    if (isTrue) {
+        println("This is true!");
+    }
+    let counter: number = 0;
+    while (counter < 5) {
+        println("Counter: " + toString(counter));
+        counter = counter + 1;
+    }
+    for (let i: number = 0; i < 3; i = i + 1) {
+        println("For loop iteration: " + toString(i));
+    }
+    return 0;
+}

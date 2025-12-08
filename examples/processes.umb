@@ -1,0 +1,30 @@
+function main(): number {
+    println("Process Management Example");
+    println(String.repeat("=", 50));
+    println("\\n1. Running 'ls -la':");
+    let lsProc: Process = Process.spawn("ls", ["-la"]);
+    let exitCode: number = lsProc.wait();
+    println("Exit code: " + toString(exitCode));
+    println("\\n2. Long-running process:");
+    let sleepProc: Process = Process.spawn("sleep", ["2"]);
+    if (sleepProc.isRunning()) {
+        println("Process is running (PID: " + toString(sleepProc.pid) + ")");
+    }
+    Timer.sleep(500);
+    if (sleepProc.isRunning()) {
+        println("Still running...");
+    }
+    sleepProc.wait();
+    println("Process completed");
+    println("\\n3. Environment Information:");
+    println("Current directory: " + Env.cwd());
+    println("Home directory: " + Env.home());
+    println("User: " + Env.get("USER", "unknown"));
+    println("\\n4. Creating and reading file:");
+    File.writeFile("test_process.txt", "Hello from Umbrella!");
+    let catProc: Process = Process.spawn("cat", ["test_process.txt"]);
+    catProc.wait();
+    File.deleteFile("test_process.txt");
+    println("File cleaned up");
+    return 0;
+}

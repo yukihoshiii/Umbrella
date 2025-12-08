@@ -1,0 +1,37 @@
+function main(): number {
+    let x: number = 10;
+    let result: string = x > 5 ? "greater" : "smaller";
+    println("Ternary result: " + result);
+    let count: number = 5;
+    count += 3;   
+    println("After +=: " + toString(count));
+    count *= 2;   
+    println("After *=: " + toString(count));
+    let a: number = 12;   
+    let b: number = 10;   
+    let andResult: number = a & b;   
+    println("12 & 10 = " + toString(andResult));
+    let orResult: number = a | b;    
+    println("12 | 10 = " + toString(orResult));
+    let xorResult: number = a ^ b;   
+    println("12 ^ 10 = " + toString(xorResult));
+    let shiftLeft: number = 5 << 2;   
+    println("5 << 2 = " + toString(shiftLeft));
+    let shiftRight: number = 20 >> 2;   
+    println("20 >> 2 = " + toString(shiftRight));
+    let numbers: Array<number> = [1, 2, 3, 4, 5];
+    println("Array length: " + toString(numbers.length));
+    numbers.push(6);
+    println("After push(6): length = " + toString(numbers.length));
+    let last: number = numbers.pop();
+    println("Popped: " + toString(last));
+    numbers.reverse();
+    println("After reverse");
+    numbers.sort();
+    println("After sort");
+    let hasThree: boolean = numbers.includes(3);
+    println("Includes 3: " + toString(hasThree));
+    let indexOfFour: number = numbers.indexOf(4);
+    println("Index of 4: " + toString(indexOfFour));
+    return 0;
+}

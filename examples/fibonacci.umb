@@ -1,0 +1,16 @@
+function fibonacci(n: number): number {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+function main(): number {
+    println("Fibonacci Sequence:");
+    let i: number = 0;
+    while (i < 15) {
+        let fib: number = fibonacci(i);
+        println("fibonacci(" + toString(i) + ") = " + toString(fib));
+        i = i + 1;
+    }
+    return 0;
+}

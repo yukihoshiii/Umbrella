@@ -1,0 +1,120 @@
+class TestSuite {
+    name: string;
+    tests: Array<Test>;
+    passed: number;
+    failed: number;
+    constructor(name: string) {
+        this.name = name;
+        this.tests = [];
+        this.passed = 0;
+        this.failed = 0;
+    }
+    it(description: string, testFn: function): void {
+        let test: Test = new Test(description, testFn);
+        this.tests.push(test);
+    }
+    run(): void {
+        println("\\n" + String.repeat("=", 50));
+        println("Test Suite: " + this.name);
+        println(String.repeat("=", 50));
+        for (let i: number = 0; i < this.tests.length; i = i + 1) {
+            let test: Test = this.tests[i];
+            try {
+                test.run();
+                this.passed = this.passed + 1;
+                println("  ✓ " + test.description);
+            } catch (error) {
+                this.failed = this.failed + 1;
+                println("  ✗ " + test.description);
+                println("    Error: " + error);
+            }
+        }
+        println(String.repeat("-", 50));
+        println("Results: " + toString(this.passed) + " passed, " + 
+                toString(this.failed) + " failed");
+        println(String.repeat("=", 50));
+    }
+}
+class Test {
+    description: string;
+    testFn: function;
+    constructor(desc: string, fn: function) {
+        this.description = desc;
+        this.testFn = fn;
+    }
+    run(): void {
+        this.testFn();
+    }
+}
+class Expect {
+    value: any;
+    constructor(val: any) {
+        this.value = val;
+    }
+    toBe(expected: any): void {
+        if (this.value != expected) {
+            throw "Expected " + toString(expected) + " but got " + toString(this.value);
+        }
+    }
+    toBeGreaterThan(expected: number): void {
+        if (this.value <= expected) {
+            throw "Expected value to be greater than " + toString(expected);
+        }
+    }
+    toBeLessThan(expected: number): void {
+        if (this.value >= expected) {
+            throw "Expected value to be less than " + toString(expected);
+        }
+    }
+    toContain(item: any): void {
+        if (!this.value.includes(item)) {
+            throw "Expected array to contain " + toString(item);
+        }
+    }
+}
+function expect(value: any): Expect {
+    return new Expect(value);
+}
+function describe(suiteName: string, suiteFn: function): void {
+    let suite: TestSuite = new TestSuite(suiteName);
+    suiteFn(suite);
+    suite.run();
+}
+function main(): number {
+    describe("Math operations", (suite) => {
+        suite.it("should add numbers correctly", () => {
+            expect(2 + 2).toBe(4);
+            expect(10 + 5).toBe(15);
+        });
+        suite.it("should multiply numbers", () => {
+            expect(3 * 4).toBe(12);
+            expect(5 * 5).toBe(25);
+        });
+        suite.it("should handle division", () => {
+            expect(10 / 2).toBe(5);
+            expect(20 / 4).toBe(5);
+        });
+    });
+    describe("String operations", (suite) => {
+        suite.it("should get string length", () => {
+            expect(String.length("Hello")).toBe(5);
+            expect(String.length("")).toBe(0);
+        });
+        suite.it("should convert to uppercase", () => {
+            expect(String.toUpperCase("hello")).toBe("HELLO");
+        });
+    });
+    describe("Array operations", (suite) => {
+        suite.it("should push elements", () => {
+            let arr: Array<number> = [1, 2, 3];
+            arr.push(4);
+            expect(arr.length).toBe(4);
+        });
+        suite.it("should filter elements", () => {
+            let arr: Array<number> = [1, 2, 3, 4, 5];
+            let filtered: Array<number> = arr.filter(x => x > 2);
+            expect(filtered.length).toBe(3);
+        });
+    });
+    return 0;
+}

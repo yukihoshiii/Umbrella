@@ -1,0 +1,22 @@
+class Person {
+    name: string;
+    age: number;
+    constructor(name: string, age: number) {
+        this.name = name;
+        this.age = age;
+    }
+    greet(): void {
+        println("Hello, my name is " + this.name);
+        println("I am " + toString(this.age) + " years old");
+    }
+    haveBirthday(): void {
+        this.age = this.age + 1;
+        println("Happy birthday! Now I'm " + toString(this.age));
+    }
+}
+function main(): number {
+    let person: Person = new Person("Alice", 25);
+    person.greet();
+    person.haveBirthday();
+    return 0;
+}

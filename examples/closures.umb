@@ -1,0 +1,34 @@
+function makeCounter(): function {
+    let count: number = 0;
+    return function(): number {
+        count = count + 1;
+        return count;
+    };
+}
+function map(arr: Array<number>, transform: function): Array<number> {
+    let result: Array<number> = [];
+    let i: number = 0;
+    while (i < arr.length) {
+        result.push(transform(arr[i]));
+        i = i + 1;
+    }
+    return result;
+}
+function double(x: number): number {
+    return x * 2;
+}
+function main(): number {
+    let counter: function = makeCounter();
+    println("Count: " + toString(counter()));   
+    println("Count: " + toString(counter()));   
+    println("Count: " + toString(counter()));   
+    let numbers: Array<number> = [1, 2, 3, 4, 5];
+    let doubled: Array<number> = map(numbers, double);
+    println("Original: [1, 2, 3, 4, 5]");
+    println("Doubled: " + doubled.join(", "));
+    let filtered: Array<number> = numbers.filter(x => x > 2);
+    println("Filtered (>2): " + filtered.join(", "));
+    let sum: number = numbers.reduce((acc, x) => acc + x, 0);
+    println("Sum: " + toString(sum));
+    return 0;
+}

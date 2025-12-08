@@ -1,0 +1,12 @@
+function main(): number {
+    println("Making HTTP request...");
+    let response: HTTPResponse = HTTP.get("https://api.github.com/users/github");
+    println("Status: " + toString(response.statusCode));
+    println("Body length: " + toString(String.length(response.body)));
+    println("Response preview:");
+    println(String.substring(response.body, 0, 200));
+    let postData: string = JSON.stringify("test data");
+    let postResponse: HTTPResponse = HTTP.post("https://httpbin.org/post", postData);
+    println("\\nPOST Status: " + toString(postResponse.statusCode));
+    return 0;
+}

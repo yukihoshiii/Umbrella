@@ -1,0 +1,24 @@
+function main(): number {
+    let text: string = "Contact: alice@example.com or bob@test.org";
+    let emailPattern: Regex = new Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+    if (emailPattern.test(text)) {
+        println("Found email addresses!");
+    }
+    let emails: Array<string> = emailPattern.findAll(text);
+    println("Found " + toString(emails.length) + " emails:");
+    let i: number = 0;
+    while (i < emails.length) {
+        println("  - " + emails[i]);
+        i = i + 1;
+    }
+    let censored: string = emailPattern.replace(text, "[REDACTED]");
+    println("\\nCensored: " + censored);
+    let phonePattern: Regex = new Regex("\\d{3}-\\d{3}-\\d{4}");
+    let phoneText: string = "Call me at 555-123-4567 or 555-987-6543";
+    let phones: Array<string> = phonePattern.findAll(phoneText);
+    println("\\nPhone numbers:");
+    for (let j: number = 0; j < phones.length; j = j + 1) {
+        println("  - " + phones[j]);
+    }
+    return 0;
+}

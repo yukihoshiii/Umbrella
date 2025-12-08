@@ -1,0 +1,23 @@
+function main(): number {
+    let filename: string = "test.txt";
+    let content: string = "Hello from Umbrella!\\nThis is line 2.";
+    File.writeFile(filename, content);
+    println("File written: " + filename);
+    if (File.exists(filename)) {
+        println("File exists!");
+        let readContent: string = File.readFile(filename);
+        println("File content:");
+        println(readContent);
+    }
+    let jsonStr: string = JSON.stringify("Hello, JSON!");
+    println("JSON string: " + jsonStr);
+    let parsed: string = JSON.parse(jsonStr);
+    println("Parsed: " + parsed);
+    Console.log("This is a log message");
+    Console.info("This is an info message");
+    Console.warn("This is a warning message");
+    Console.error("This is an error message");
+    File.deleteFile(filename);
+    println("File deleted");
+    return 0;
+}

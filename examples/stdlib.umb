@@ -1,0 +1,22 @@
+function main(): number {
+    let x: number = 16;
+    let sqrtX: number = Math.sqrt(x);
+    println("sqrt(16) = " + toString(sqrtX));
+    let y: number = 2;
+    let z: number = 8;
+    let power: number = Math.pow(y, z);
+    println("pow(2, 8) = " + toString(power));
+    let text: string = "Hello, Umbrella!";
+    let length: number = text.length;
+    println("Length of '" + text + "' = " + toString(length));
+    let upper: string = text.toUpperCase();
+    println("Uppercase: " + upper);
+    let lower: string = text.toLowerCase();
+    println("Lowercase: " + lower);
+    let nums: Array<number> = [5, 2, 8, 1, 9];
+    let max: number = Math.max(nums);
+    println("Max: " + toString(max));
+    let min: number = Math.min(nums);
+    println("Min: " + toString(min));
+    return 0;
+}

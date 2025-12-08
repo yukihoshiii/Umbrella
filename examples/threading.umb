@@ -1,0 +1,38 @@
+let counter: number = 0;
+let mutex: Mutex = new Mutex();
+function incrementCounter(): void {
+    for (let i: number = 0; i < 1000; i = i + 1) {
+        mutex.lock();
+        counter = counter + 1;
+        mutex.unlock();
+    }
+}
+function worker(id: number): void {
+    println("Worker " + toString(id) + " started");
+    Timer.sleep(100 * id);   
+    println("Worker " + toString(id) + " doing work...");
+    incrementCounter();
+    println("Worker " + toString(id) + " finished");
+}
+function main(): number {
+    println("Starting multi-threaded counter example");
+    println("Initial counter: " + toString(counter));
+    let threads: Array<Thread> = [];
+    for (let i: number = 0; i < 5; i = i + 1) {
+        let thread: Thread = Thread.spawn(() => worker(i));
+        threads.push(thread);
+    }
+    println("\\nWaiting for threads to complete...");
+    for (let i: number = 0; i < threads.length; i = i + 1) {
+        threads[i].join();
+    }
+    println("\\nAll threads completed");
+    println("Final counter: " + toString(counter));
+    println("Expected: " + toString(5 * 1000));
+    println("\\nSetting timeout...");
+    Timer.setTimeout(() => {
+        println("Timeout fired after 1 second!");
+    }, 1000);
+    Timer.sleep(1500);   
+    return 0;
+}
