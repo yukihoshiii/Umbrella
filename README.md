@@ -100,17 +100,23 @@ sudo apt-get install -y build-essential cmake git curl
 
 To run `umbrella` from any directory without installing it system-wide, add the build directory to your PATH:
 
-**macOS (Zsh):**
+### Global Access (Optional)
+
+To run `umbrella` from any directory without installing it system-wide, add the build directory to your PATH:
+
+**Zsh (Default on macOS, Kali Linux):**
 ```bash
 echo 'export PATH="'$PWD'/build:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-**Linux (Bash):**
+**Bash (Default on Ubuntu, Debian, Fedora):**
 ```bash
 echo 'export PATH="'$PWD'/build:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
+
+> **Note:** If you are unsure which shell you are using, run `echo $SHELL`.
 
 Now you can run:
 ```bash
