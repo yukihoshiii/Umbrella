@@ -1,21 +1,21 @@
 # Umbrella Programming Language 🌂
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/umbrella-lang/umbrella)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yukihoshiii/Umbrella)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/umbrella-lang/umbrella)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/yukihoshiii/Umbrella)
 
-> Современный компилируемый язык программирования с синтаксисом JavaScript/TypeScript и производительностью C++
+> A modern compiled programming language with JavaScript/TypeScript syntax and C++ performance.
 
-**Umbrella** - это полнофункциональный язык программирования, который объединяет:
-- 🚀 **Производительность C++** - компиляция в нативный код
-- 💎 **Синтаксис JavaScript/TypeScript** - знакомый и простой
-- 📚 **Богатая стандартная библиотека** - 90+ встроенных функций
-- 🔧 **Современные инструменты** - package manager, testing framework
-- 🌐 **Широкие возможности** - HTTP, Database, Threading, Regex
+**Umbrella** is a full-featured programming language that combines:
+- 🚀 **C++ Performance** - compiles to native code
+- 💎 **JavaScript/TypeScript Syntax** - familiar and simple
+- 📚 **Rich Standard Library** - 90+ built-in functions
+- 🔧 **Modern Tools** - package manager, testing framework
+- 🌐 **Extensive Capabilities** - HTTP, Database, Threading, Regex
 
 ---
 
-## 📑 Содержание
+## 📑 Table of Contents
 
 - [Features](#-features)
 - [Installation](#-installation)
@@ -79,8 +79,8 @@ sudo apt-get install -y build-essential cmake git curl
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/umbrella-lang/umbrella.git
-    cd umbrella
+    git clone https://github.com/yukihoshiii/Umbrella
+    cd Umbrella
     ```
 
 2.  **Build the compiler**
