@@ -40,7 +40,9 @@ target_include_directories(umbrella PRIVATE
 )
 
 # Installation
+# Installation
 install(TARGETS umbrella DESTINATION bin)
+install(DIRECTORY src/ DESTINATION include/umbrella FILES_MATCHING PATTERN "*.h" PATTERN "*.cpp")
 
 # Print build information
 message(STATUS "Umbrella Programming Language Compiler")

@@ -159,11 +159,42 @@ int main(int argc, char* argv[]) {
         std::string compilerDir = (lastSlash != std::string::npos) 
             ? compilerPath.substr(0, lastSlash) 
             : ".";
+
+        // Determine paths for runtime and includes
+        // 1. Try development/build path: ../src/runtime/runtime.cpp
+        std::string runtimePath = compilerDir + "/../src/runtime/runtime.cpp";
+        std::string includeDir = compilerDir + "/../src";
+        
+        // Helper to check file existence
+        auto fileExists = [](const std::string& name) {
+            std::ifstream f(name.c_str());
+            return f.good();
+        };
+
+        if (!fileExists(runtimePath)) {
+            // 2. Try installed path: ../include/umbrella/runtime/runtime.cpp
+            // (Assuming install(DIRECTORY src/ DESTINATION include/umbrella))
+            std::string installedRuntime = compilerDir + "/../include/umbrella/runtime/runtime.cpp";
+            std::string installedInclude = compilerDir + "/../include/umbrella";
+            
+            if (fileExists(installedRuntime)) {
+                runtimePath = installedRuntime;
+                includeDir = installedInclude;
+            } else {
+                // If neither found, keep default but warn? Or let g++ fail.
+                if (verbose) {
+                    std::cout << "Warning: Could not locate runtime.cpp. Checked:\n"
+                              << "  " << runtimePath << "\n"
+                              << "  " << installedRuntime << "\n";
+                }
+            }
+        }
+
         std::stringstream compileCmd;
         compileCmd << "g++ -std=c++17 ";
-        compileCmd << "-I" << compilerDir << "/../src ";
+        compileCmd << "-I" << includeDir << " ";
         compileCmd << cppFile << " ";
-        compileCmd << compilerDir << "/../src/runtime/runtime.cpp ";
+        compileCmd << runtimePath << " ";
         compileCmd << "-o " << outputFile;
         if (verbose) {
             std::cout << "Compile command: " << compileCmd.str() << "\n";
