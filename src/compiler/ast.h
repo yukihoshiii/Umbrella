@@ -81,6 +81,13 @@ public:
     Type elementType = Type::ANY;
     std::string toString() const override;
 };
+class MapLiteral : public Expression {
+public:
+    std::vector<std::string> keys;
+    std::vector<std::unique_ptr<Expression>> values;
+    Type valueType = Type::ANY;
+    std::string toString() const override;
+};
 class ArrayAccess : public Expression {
 public:
     std::unique_ptr<Expression> array;

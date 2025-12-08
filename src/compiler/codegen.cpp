@@ -74,7 +74,24 @@ std::string CodeGenerator::generateExpression(const Expression* expr) {
     if (auto memExpr = dynamic_cast<const MemberExpression*>(expr)) {
         return generateMemberExpression(memExpr);
     }
+    if (auto mapLit = dynamic_cast<const MapLiteral*>(expr)) {
+        return generateMapLiteral(mapLit);
+    }
     return "";
+}
+std::string CodeGenerator::generateMapLiteral(const MapLiteral* expr) {
+    std::stringstream ss;
+    std::string valueType = typeToCppType(expr->valueType);
+    if (expr->values.empty() && expr->valueType == Type::ANY) {
+        valueType = "std::string"; // Default for empty map?
+    }
+    ss << "Map<std::string, " << valueType << ">(std::map<std::string, " << valueType << ">{";
+    for (size_t i = 0; i < expr->keys.size(); i++) {
+        if (i > 0) ss << ", ";
+        ss << "{\"" << expr->keys[i] << "\", " << generateExpression(expr->values[i].get()) << "}";
+    }
+    ss << "})";
+    return ss.str();
 }
 std::string CodeGenerator::generateMemberExpression(const MemberExpression* expr) {
     return generateExpression(expr->object.get()) + "." + expr->property;

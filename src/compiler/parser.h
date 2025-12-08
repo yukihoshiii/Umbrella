@@ -40,6 +40,7 @@ private:
     std::unique_ptr<Expression> parseCall();
     std::unique_ptr<Expression> parsePrimary();
     std::unique_ptr<Expression> parseArrayLiteral();
+    std::unique_ptr<Expression> parseMapLiteral();
     Type parseType();
     void error(const std::string& message);
 };

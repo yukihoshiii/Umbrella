@@ -46,6 +46,8 @@ template<typename K, typename V>
 class Map {
 public:
     std::map<K, V> data;
+    Map() = default;
+    Map(const std::map<K, V>& d) : data(d) {}
     void set(const K& key, const V& value) {
         data[key] = value;
     }

@@ -50,6 +50,17 @@ std::string ArrayExpression::toString() const {
         ss << elements[i]->toString();
     }
     ss << "]";
+    ss << "]";
+    return ss.str();
+}
+std::string MapLiteral::toString() const {
+    std::stringstream ss;
+    ss << "{";
+    for (size_t i = 0; i < keys.size(); i++) {
+        if (i > 0) ss << ", ";
+        ss << "\"" << keys[i] << "\": " << values[i]->toString();
+    }
+    ss << "}";
     return ss.str();
 }
 std::string ArrayAccess::toString() const {

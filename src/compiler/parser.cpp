@@ -325,8 +325,28 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     if (match(TokenType::LBRACKET)) {
         return parseArrayLiteral();
     }
+    if (match(TokenType::LBRACE)) {
+        return parseMapLiteral();
+    }
     error("Expected expression");
     return nullptr;
+}
+std::unique_ptr<Expression> Parser::parseMapLiteral() {
+    auto map = std::make_unique<MapLiteral>();
+    if (!check(TokenType::RBRACE)) {
+        do {
+            std::string key = consume(TokenType::STRING, "Expected string key").value;
+            consume(TokenType::COLON, "Expected ':' after key");
+            auto value = parseExpression();
+            if (map->keys.empty()) {
+                map->valueType = value->type;
+            }
+            map->keys.push_back(key);
+            map->values.push_back(std::move(value));
+        } while (match(TokenType::COMMA));
+    }
+    consume(TokenType::RBRACE, "Expected '}' after map entries");
+    return map;
 }
 std::unique_ptr<Expression> Parser::parseArrayLiteral() {
     auto array = std::make_unique<ArrayExpression>();

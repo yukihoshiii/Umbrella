@@ -27,6 +27,7 @@ private:
     std::string generateUnaryExpression(const UnaryExpression* expr);
     std::string generateCallExpression(const CallExpression* expr);
     std::string generateArrayExpression(const ArrayExpression* expr);
+    std::string generateMapLiteral(const MapLiteral* expr);
     std::string generateMemberExpression(const MemberExpression* expr);
     std::string typeToCppType(Type type);
     std::string escapeString(const std::string& str);
