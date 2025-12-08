@@ -1,0 +1,27 @@
+{
+    "iconDefinitions": {
+        "umbrella-file-light": {
+            "iconPath": "/Users/yuki/umbrella/.vscode/icons/umbrella-light.svg"
+        },
+        "umbrella-file-dark": {
+            "iconPath": "/Users/yuki/umbrella/.vscode/icons/umbrella-dark.svg"
+        }
+    },
+    "fileExtensions": {
+        "umb": "umbrella-file-dark"
+    },
+    "light": {
+        "iconDefinitions": {
+            "umbrella-file-light": {
+                "iconPath": "/Users/yuki/umbrella/.vscode/icons/umbrella-light.svg"
+            },
+            "umbrella-file-dark": {
+                "iconPath": "/Users/yuki/umbrella/.vscode/icons/umbrella-dark.svg"
+            }
+        },
+        "fileExtensions": {
+            "umb": "umbrella-file-light"
+        }
+    },
+    "hidesExplorerArrows": false
+}

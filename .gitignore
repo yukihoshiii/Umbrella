@@ -1,5 +1,4 @@
 # Build artifacts
-build/
 a.out
 *.o
 *.lib
@@ -17,7 +16,6 @@ ehthumbs.db
 Thumbs.db
 
 # Editor directories
-.vscode/
 .idea/
 *.swp
 *~
