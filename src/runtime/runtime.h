@@ -274,6 +274,23 @@ public:
         if (index >= data.size()) throw std::out_of_range("Array index out of bounds");
         return data[index];
     }
+    T at(int index) const {
+        if (index < 0) index += static_cast<int>(data.size());
+        if (index < 0 || index >= static_cast<int>(data.size())) throw std::out_of_range("Array index out of bounds");
+        return data[index];
+    }
+    template<typename Func>
+    T find(Func predicate) const {
+        auto it = std::find_if(data.begin(), data.end(), predicate);
+        if (it != data.end()) return *it;
+        throw std::runtime_error("Element not found in Array.find()");
+    }
+    template<typename Func>
+    int findIndex(Func predicate) const {
+        auto it = std::find_if(data.begin(), data.end(), predicate);
+        if (it != data.end()) return static_cast<int>(std::distance(data.begin(), it));
+        return -1;
+    }
 };
 }  
 }  

@@ -11,31 +11,8 @@ std::string CodeGenerator::generate(const Program& program) {
     ss << "#include <cmath>\n";
     ss << "#include <algorithm>\n";
     ss << "#include <cstdlib>\n";
-    ss << "#include <ctime>\n\n";
-    ss << "namespace umbrella { namespace runtime {\n";
-    ss << "inline std::string toString(double value) { return std::to_string(value); }\n";
-    ss << "inline std::string toString(bool value) { return value ? \"true\" : \"false\"; }\n";
-    ss << "inline double toNumber(const std::string& str) { try { return std::stod(str); } catch (...) { return 0.0; } }\n\n";
-    ss << "namespace Math {\n";
-    ss << "  inline double sqrt(double x) { return std::sqrt(x); }\n";
-    ss << "  inline double pow(double base, double exp) { return std::pow(base, exp); }\n";
-    ss << "  inline double abs(double x) { return std::abs(x); }\n";
-    ss << "  inline double floor(double x) { return std::floor(x); }\n";
-    ss << "  inline double ceil(double x) { return std::ceil(x); }\n";
-    ss << "  inline double round(double x) { return std::round(x); }\n";
-    ss << "  inline double max(double a, double b) { return a > b ? a : b; }\n";
-    ss << "  inline double min(double a, double b) { return a < b ? a : b; }\n";
-    ss << "  inline double random() { static bool init = false; if (!init) { std::srand(std::time(nullptr)); init = true; } return static_cast<double>(std::rand()) / RAND_MAX; }\n";
-    ss << "  const double PI = 3.14159265358979323846;\n";
-    ss << "  const double E = 2.71828182845904523536;\n";
-    ss << "}\n\n";
-    ss << "class String {\n";
-    ss << "public:\n";
-    ss << "  static int length(const std::string& s) { return s.length(); }\n";
-    ss << "  static std::string toUpperCase(const std::string& s) { std::string r = s; std::transform(r.begin(), r.end(), r.begin(), ::toupper); return r; }\n";
-    ss << "  static std::string toLowerCase(const std::string& s) { std::string r = s; std::transform(r.begin(), r.end(), r.begin(), ::tolower); return r; }\n";
-    ss << "};\n";
-    ss << "}} // namespace umbrella::runtime\n\n";
+    ss << "#include <ctime>\n";
+    ss << "#include \"runtime/runtime.h\"\n\n";
     ss << "using namespace umbrella::runtime;\n\n";
     for (const auto& stmt : program.statements) {
         ss << generateStatement(stmt.get());
@@ -94,7 +71,13 @@ std::string CodeGenerator::generateExpression(const Expression* expr) {
     if (auto arrExpr = dynamic_cast<const ArrayExpression*>(expr)) {
         return generateArrayExpression(arrExpr);
     }
+    if (auto memExpr = dynamic_cast<const MemberExpression*>(expr)) {
+        return generateMemberExpression(memExpr);
+    }
     return "";
+}
+std::string CodeGenerator::generateMemberExpression(const MemberExpression* expr) {
+    return generateExpression(expr->object.get()) + "." + expr->property;
 }
 std::string CodeGenerator::generateVariableDeclaration(const VariableDeclaration* decl) {
     std::stringstream ss;
@@ -270,12 +253,21 @@ std::string CodeGenerator::generateCallExpression(const CallExpression* expr) {
 }
 std::string CodeGenerator::generateArrayExpression(const ArrayExpression* expr) {
     std::stringstream ss;
-    ss << "std::vector<double>{";
+    std::string cppType = typeToCppType(expr->elementType);
+    if (expr->elements.empty()) {
+        // Default to double if empty, or perhaps ANY/auto might be tricky in C++
+        // Let's default to double for empty arrays for now to maintain behavior
+        // Or if elementType was set to ANY (default), maybe we should default to double?
+        if (expr->elementType == Type::ANY) {
+             cppType = "double";
+        }
+    }
+    ss << "Array<" << cppType << ">(std::vector<" << cppType << ">{";
     for (size_t i = 0; i < expr->elements.size(); i++) {
         if (i > 0) ss << ", ";
         ss << generateExpression(expr->elements[i].get());
     }
-    ss << "}";
+    ss << "})";
     return ss.str();
 }
 std::string CodeGenerator::typeToCppType(Type type) {

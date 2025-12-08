@@ -291,6 +291,9 @@ std::unique_ptr<Expression> Parser::parseCall() {
             }
             consume(TokenType::RPAREN, "Expected ')' after arguments");
             expr = std::move(call);
+        } else if (match(TokenType::DOT)) {
+            Token name = consume(TokenType::IDENTIFIER, "Expected property name after '.'");
+            expr = std::make_unique<MemberExpression>(std::move(expr), name.value);
         } else {
             break;
         }
@@ -329,7 +332,11 @@ std::unique_ptr<Expression> Parser::parseArrayLiteral() {
     auto array = std::make_unique<ArrayExpression>();
     if (!check(TokenType::RBRACKET)) {
         do {
-            array->elements.push_back(parseExpression());
+            auto element = parseExpression();
+            if (array->elements.empty()) {
+                array->elementType = element->type;
+            }
+            array->elements.push_back(std::move(element));
         } while (match(TokenType::COMMA));
     }
     consume(TokenType::RBRACKET, "Expected ']' after array elements");
