@@ -9,6 +9,7 @@
 #include <unistd.h>
 #endif
 #include <limits.h>
+#include <sys/stat.h>
 #include "compiler/lexer.h"
 #include "compiler/parser.h"
 #include "compiler/codegen.h"
@@ -106,63 +107,88 @@ int main(int argc, char* argv[]) {
             std::cout.flush();
         }
         std::string source = readFile(inputFile);
-        if (verbose) {
-            std::cout << "Lexical analysis..." << std::endl;
-            std::cout.flush();
-        }
-        Lexer lexer(source);
-        std::vector<Token> tokens = lexer.tokenize();
-        if (verbose) {
-            std::cout << "Generated " << tokens.size() << " tokens" << std::endl;
-            std::cout.flush();
-        }
-        if (verbose) {
-            std::cout << "Parsing..." << std::endl;
-            std::cout.flush();
-        }
-        Parser parser(tokens);
-        auto program = parser.parse();
-        if (verbose) {
-            std::cout << "AST generated successfully" << std::endl;
-            std::cout.flush();
-        }
-        if (verbose) {
-            std::cout << "Generating C++ code..." << std::endl;
-            std::cout.flush();
-        }
-        CodeGenerator codegen;
-        std::string cppCode = codegen.generate(*program);
-        if (cppCode.find("int main(") == std::string::npos) {
-            cppCode += "\nint main() {\n    return 0;\n}\n";
-        }
-        std::string cppFile = "/tmp/umbrella_temp.cpp";
-        writeFile(cppFile, cppCode);
-        if (verbose || emitCppOnly) {
-            std::cout << "Generated C++ code:\n";
-            std::cout << "-------------------\n";
-            std::cout << cppCode;
-            std::cout << "-------------------\n";
-        }
-        if (emitCppOnly) {
-            std::cout << "C++ code written to: " << cppFile << "\n";
-            return 0;
-        }
-        if (verbose) {
-            std::cout << "Compiling to native code..." << std::endl;
-            std::cout.flush();
-        }
-        std::string compilerPath = getExecutablePath();
-        if (compilerPath.empty()) {
-            compilerPath = argv[0];
-        }
-        size_t lastSlash = compilerPath.find_last_of("/\\");
-        std::string compilerDir = (lastSlash != std::string::npos) 
-            ? compilerPath.substr(0, lastSlash) 
-            : ".";
+        
+        // Simple hash of standard source content to avoid re-compilation
+        std::hash<std::string> hasher;
+        size_t sourceHash = hasher(source);
+        std::string cacheDir = std::string(getenv("HOME")) + "/.umbrella/cache";
+        std::string cachedBinary = cacheDir + "/" + std::to_string(sourceHash);
+        
+        // Create cache dir if not exists
+        std::string mkdirCmd = "mkdir -p " + cacheDir;
+        system(mkdirCmd.c_str());
 
-        // Determine paths for runtime and includes
-        // 1. Try development/build path: ../src/runtime/runtime.cpp
+        // Check if cached binary exists
+        bool useCache = false;
+        if (run && !emitCppOnly) {
+            std::ifstream cacheFile(cachedBinary);
+            if (cacheFile.good()) {
+                useCache = true;
+                if (verbose) {
+                    std::cout << "Using cached binary: " << cachedBinary << std::endl;
+                }
+                outputFile = cachedBinary; // Point to cached binary
+            }
+        }
+
+        if (!useCache) {
+            if (verbose) {
+                std::cout << "Lexical analysis..." << std::endl;
+                std::cout.flush();
+            }
+            Lexer lexer(source);
+            std::vector<Token> tokens = lexer.tokenize();
+            if (verbose) {
+                std::cout << "Generated " << tokens.size() << " tokens" << std::endl;
+                std::cout.flush();
+            }
+            if (verbose) {
+                std::cout << "Parsing..." << std::endl;
+                std::cout.flush();
+            }
+            Parser parser(tokens);
+            auto program = parser.parse();
+            if (verbose) {
+                std::cout << "AST generated successfully" << std::endl;
+                std::cout.flush();
+            }
+            if (verbose) {
+                std::cout << "Generating C++ code..." << std::endl;
+                std::cout.flush();
+            }
+            CodeGenerator codegen;
+            std::string cppCode = codegen.generate(*program);
+            if (cppCode.find("int main(") == std::string::npos) {
+                cppCode += "\nint main() {\n    return 0;\n}\n";
+            }
+            std::string cppFile = "/tmp/umbrella_temp_" + std::to_string(sourceHash) + ".cpp";
+            writeFile(cppFile, cppCode);
+            if (verbose || emitCppOnly) {
+                std::cout << "Generated C++ code:\n";
+                std::cout << "-------------------\n";
+                std::cout << cppCode;
+                std::cout << "-------------------\n";
+            }
+            if (emitCppOnly) {
+                std::cout << "C++ code written to: " << cppFile << "\n";
+                return 0;
+            }
+            if (verbose) {
+                std::cout << "Compiling to native code..." << std::endl;
+                std::cout.flush();
+            }
+            std::string compilerPath = getExecutablePath();
+            if (compilerPath.empty()) {
+                compilerPath = argv[0];
+            }
+            size_t lastSlash = compilerPath.find_last_of("/\\");
+            std::string compilerDir = (lastSlash != std::string::npos) 
+                ? compilerPath.substr(0, lastSlash) 
+                : ".";
+
+            // 1. Try development/build path: ../src/runtime/runtime.cpp
         std::string runtimePath = compilerDir + "/../src/runtime/runtime.cpp";
+        std::string advancedPath = compilerDir + "/../src/runtime/advanced.cpp";
         std::string includeDir = compilerDir + "/../src";
         
         // Helper to check file existence
@@ -175,10 +201,12 @@ int main(int argc, char* argv[]) {
             // 2. Try installed path: ../include/umbrella/runtime/runtime.cpp
             // (Assuming install(DIRECTORY src/ DESTINATION include/umbrella))
             std::string installedRuntime = compilerDir + "/../include/umbrella/runtime/runtime.cpp";
+            std::string installedAdvanced = compilerDir + "/../include/umbrella/runtime/advanced.cpp";
             std::string installedInclude = compilerDir + "/../include/umbrella";
             
             if (fileExists(installedRuntime)) {
                 runtimePath = installedRuntime;
+                advancedPath = installedAdvanced;
                 includeDir = installedInclude;
             } else {
                 // If neither found, keep default but warn? Or let g++ fail.
@@ -190,39 +218,57 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        // Cache output file
+        std::string targetBinary = (run && outputFile == "a.out") ? cachedBinary : outputFile;
+
         std::stringstream compileCmd;
-        compileCmd << "g++ -std=c++17 ";
+        compileCmd << "g++ -std=c++17 -O3 "; // Optimization on by default
         compileCmd << "-I" << includeDir << " ";
         compileCmd << cppFile << " ";
         compileCmd << runtimePath << " ";
-        compileCmd << "-o " << outputFile;
-        if (verbose) {
-            std::cout << "Compile command: " << compileCmd.str() << "\n";
+        compileCmd << advancedPath << " ";
+        compileCmd << "-o " << targetBinary;
+            
+            // Add sqlite3 if we are linking it
+            compileCmd << " -lsqlite3 "; 
+
+            if (verbose) {
+                std::cout << "Compile command: " << compileCmd.str() << "\n";
+            }
+            int result = system(compileCmd.str().c_str());
+            if (result != 0) {
+                std::cerr << "Error: Compilation failed\n";
+                return 1;
+            }
+            if (verbose) {
+                std::cout << "Compilation successful!" << std::endl;
+                std::cout.flush();
+            }
+            
+            if (targetBinary == cachedBinary) {
+                chmod(cachedBinary.c_str(), 0755); // Ensure executable
+                outputFile = cachedBinary; // Prepare to run cached binary
+            } else {
+                std::cout << "Output written to: " << outputFile << "\n";
+            }
+
+            remove(cppFile.c_str());
         }
-        int result = system(compileCmd.str().c_str());
-        if (result != 0) {
-            std::cerr << "Error: Compilation failed\n";
-            return 1;
-        }
-        if (verbose) {
-            std::cout << "Compilation successful!" << std::endl;
-            std::cout.flush();
-        }
-        std::cout << "Output written to: " << outputFile << "\n";
+
         if (run) {
             if (verbose) {
                 std::cout << "-------------------" << std::endl;
                 std::cout << "Running program..." << std::endl;
                 std::cout.flush();
             }
-            std::string runCmd = "./" + outputFile;
-            if (outputFile.find("/") != std::string::npos) {
-                runCmd = outputFile;
+            std::string runCmd = outputFile;
+            if (outputFile.find("/") == std::string::npos) {
+                 runCmd = "./" + outputFile;
             }
+            
             int ret = system(runCmd.c_str());
             (void)ret;  
         }
-        remove(cppFile.c_str());
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;

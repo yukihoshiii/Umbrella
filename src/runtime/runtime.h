@@ -11,6 +11,9 @@ namespace runtime {
 void print(const std::string& message);
 void println(const std::string& message);
 std::string toString(double value);
+std::string toString(int value);
+std::string toString(long long value);
+std::string toString(size_t value);
 std::string toString(bool value);
 double toNumber(const std::string& str);
 namespace Math {
@@ -26,122 +29,7 @@ namespace Math {
     const double PI = 3.14159265358979323846;
     const double E = 2.71828182845904523536;
 }
-class String {
-public:
-    static int length(const std::string& str);
-    static std::string toUpperCase(const std::string& str);
-    static std::string toLowerCase(const std::string& str);
-    static std::string substring(const std::string& str, int start, int end);
-    static int indexOf(const std::string& str, const std::string& search);
-    static std::string replace(const std::string& str, const std::string& from, const std::string& to);
-    static std::vector<std::string> split(const std::string& str, const std::string& delimiter);
-    static std::string trim(const std::string& str);
-    static bool startsWith(const std::string& str, const std::string& prefix);
-    static bool endsWith(const std::string& str, const std::string& suffix);
-    static std::string repeat(const std::string& str, int count);
-    static std::string padStart(const std::string& str, int length, const std::string& pad = " ");
-    static std::string padEnd(const std::string& str, int length, const std::string& pad = " ");
-};
-template<typename K, typename V>
-class Map {
-public:
-    std::map<K, V> data;
-    Map() = default;
-    Map(const std::map<K, V>& d) : data(d) {}
-    void set(const K& key, const V& value) {
-        data[key] = value;
-    }
-    V get(const K& key) const {
-        auto it = data.find(key);
-        if (it == data.end()) throw std::runtime_error("Key not found");
-        return it->second;
-    }
-    bool has(const K& key) const {
-        return data.find(key) != data.end();
-    }
-    void remove(const K& key) {
-        data.erase(key);
-    }
-    size_t size() const {
-        return data.size();
-    }
-    void clear() {
-        data.clear();
-    }
-    std::vector<K> keys() const {
-        std::vector<K> result;
-        for (const auto& pair : data) {
-            result.push_back(pair.first);
-        }
-        return result;
-    }
-    std::vector<V> values() const {
-        std::vector<V> result;
-        for (const auto& pair : data) {
-            result.push_back(pair.second);
-        }
-        return result;
-    }
-};
-class Date {
-public:
-    static long long now();   
-    static std::string toISOString(long long timestamp);
-    static std::string toDateString(long long timestamp);
-    static std::string toTimeString(long long timestamp);
-};
-class JSON {
-public:
-    static std::string stringify(const std::string& value);
-    static std::string parse(const std::string& json);
-};
-class File {
-public:
-    static std::string readFile(const std::string& path);
-    static void writeFile(const std::string& path, const std::string& content);
-    static bool exists(const std::string& path);
-    static void deleteFile(const std::string& path);
-};
-class Console {
-public:
-    static void log(const std::string& message);
-    static void error(const std::string& message);
-    static void warn(const std::string& message);
-    static void info(const std::string& message);
-    static void clear();
-};
-struct HTTPResponse {
-    int statusCode;
-    std::string body;
-    std::map<std::string, std::string> headers;
-};
-class HTTP {
-public:
-    static HTTPResponse get(const std::string& url);
-    static HTTPResponse post(const std::string& url, const std::string& body);
-    static HTTPResponse put(const std::string& url, const std::string& body);
-    static HTTPResponse del(const std::string& url);
-    static HTTPResponse request(const std::string& method, const std::string& url, 
-                               const std::string& body = "",
-                               const std::map<std::string, std::string>& headers = {});
-};
-class Regex {
-public:
-    std::string pattern;
-    Regex(const std::string& pat);
-    bool test(const std::string& str) const;
-    std::vector<std::string> match(const std::string& str) const;
-    std::vector<std::string> findAll(const std::string& str) const;
-    std::string replace(const std::string& str, const std::string& replacement) const;
-};
-class Env {
-public:
-    static std::string get(const std::string& name, const std::string& defaultValue = "");
-    static void set(const std::string& name, const std::string& value);
-    static bool has(const std::string& name);
-    static std::string home();
-    static std::string cwd();
-};
+
 template<typename T>
 class Array {
 public:
@@ -293,6 +181,123 @@ public:
         if (it != data.end()) return static_cast<int>(std::distance(data.begin(), it));
         return -1;
     }
+};
+
+class String {
+public:
+    static int length(const std::string& str);
+    static std::string toUpperCase(const std::string& str);
+    static std::string toLowerCase(const std::string& str);
+    static std::string substring(const std::string& str, int start, int end);
+    static int indexOf(const std::string& str, const std::string& search);
+    static std::string replace(const std::string& str, const std::string& from, const std::string& to);
+    static Array<std::string> split(const std::string& str, const std::string& delimiter);
+    static std::string trim(const std::string& str);
+    static bool startsWith(const std::string& str, const std::string& prefix);
+    static bool endsWith(const std::string& str, const std::string& suffix);
+    static std::string repeat(const std::string& str, int count);
+    static std::string padStart(const std::string& str, int length, const std::string& pad = " ");
+    static std::string padEnd(const std::string& str, int length, const std::string& pad = " ");
+};
+template<typename K, typename V>
+class Map {
+public:
+    std::map<K, V> data;
+    Map() = default;
+    Map(const std::map<K, V>& d) : data(d) {}
+    void set(const K& key, const V& value) {
+        data[key] = value;
+    }
+    V get(const K& key) const {
+        auto it = data.find(key);
+        if (it == data.end()) throw std::runtime_error("Key not found");
+        return it->second;
+    }
+    bool has(const K& key) const {
+        return data.find(key) != data.end();
+    }
+    void remove(const K& key) {
+        data.erase(key);
+    }
+    size_t size() const {
+        return data.size();
+    }
+    void clear() {
+        data.clear();
+    }
+    std::vector<K> keys() const {
+        std::vector<K> result;
+        for (const auto& pair : data) {
+            result.push_back(pair.first);
+        }
+        return result;
+    }
+    std::vector<V> values() const {
+        std::vector<V> result;
+        for (const auto& pair : data) {
+            result.push_back(pair.second);
+        }
+        return result;
+    }
+};
+class Date {
+public:
+    static long long now();   
+    static std::string toISOString(long long timestamp);
+    static std::string toDateString(long long timestamp);
+    static std::string toTimeString(long long timestamp);
+};
+class JSON {
+public:
+    static std::string stringify(const std::string& value);
+    static std::string parse(const std::string& json);
+};
+class File {
+public:
+    static std::string readFile(const std::string& path);
+    static void writeFile(const std::string& path, const std::string& content);
+    static bool exists(const std::string& path);
+    static void deleteFile(const std::string& path);
+};
+class Console {
+public:
+    static void log(const std::string& message);
+    static void error(const std::string& message);
+    static void warn(const std::string& message);
+    static void info(const std::string& message);
+    static void clear();
+};
+struct HTTPResponse {
+    int statusCode;
+    std::string body;
+    std::map<std::string, std::string> headers;
+};
+class HTTP {
+public:
+    static HTTPResponse get(const std::string& url);
+    static HTTPResponse post(const std::string& url, const std::string& body);
+    static HTTPResponse put(const std::string& url, const std::string& body);
+    static HTTPResponse del(const std::string& url);
+    static HTTPResponse request(const std::string& method, const std::string& url, 
+                               const std::string& body = "",
+                               const std::map<std::string, std::string>& headers = {});
+};
+class Regex {
+public:
+    std::string pattern;
+    Regex(const std::string& pat);
+    bool test(const std::string& str) const;
+    std::vector<std::string> match(const std::string& str) const;
+    std::vector<std::string> findAll(const std::string& str) const;
+    std::string replace(const std::string& str, const std::string& replacement) const;
+};
+class Env {
+public:
+    static std::string get(const std::string& name, const std::string& defaultValue = "");
+    static void set(const std::string& name, const std::string& value);
+    static bool has(const std::string& name);
+    static std::string home();
+    static std::string cwd();
 };
 }  
 }  

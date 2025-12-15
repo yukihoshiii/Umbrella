@@ -28,8 +28,11 @@ set(SOURCES
 add_executable(umbrella ${SOURCES})
 
 # Link libraries
+# Link libraries
 find_package(Threads REQUIRED)
-target_link_libraries(umbrella Threads::Threads)
+find_package(SQLite3 REQUIRED)
+include_directories(${SQLITE3_INCLUDE_DIRS})
+target_link_libraries(umbrella Threads::Threads sqlite3)
 
 # Set C++ standard
 target_compile_features(umbrella PRIVATE cxx_std_17)

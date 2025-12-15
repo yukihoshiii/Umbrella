@@ -12,7 +12,8 @@ std::string CodeGenerator::generate(const Program& program) {
     ss << "#include <algorithm>\n";
     ss << "#include <cstdlib>\n";
     ss << "#include <ctime>\n";
-    ss << "#include \"runtime/runtime.h\"\n\n";
+    ss << "#include \"runtime/runtime.h\"\n";
+    ss << "#include \"runtime/advanced.h\"\n\n";
     ss << "using namespace umbrella::runtime;\n\n";
     for (const auto& stmt : program.statements) {
         ss << generateStatement(stmt.get());
@@ -94,6 +95,17 @@ std::string CodeGenerator::generateMapLiteral(const MapLiteral* expr) {
     return ss.str();
 }
 std::string CodeGenerator::generateMemberExpression(const MemberExpression* expr) {
+    if (auto id = dynamic_cast<const Identifier*>(expr->object.get())) {
+        static const std::vector<std::string> staticClasses = {
+            "Math", "String", "Date", "JSON", "File", "Console", 
+            "HTTP", "Regex", "Env", "Thread", "Process", "Timer", "Database"
+        };
+        for (const auto& className : staticClasses) {
+            if (id->name == className) {
+                return className + "::" + expr->property;
+            }
+        }
+    }
     return generateExpression(expr->object.get()) + "." + expr->property;
 }
 std::string CodeGenerator::generateVariableDeclaration(const VariableDeclaration* decl) {

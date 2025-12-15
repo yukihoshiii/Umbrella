@@ -21,6 +21,15 @@ std::string toString(double value) {
     ss << value;
     return ss.str();
 }
+std::string toString(int value) {
+    return std::to_string(value);
+}
+std::string toString(long long value) {
+    return std::to_string(value);
+}
+std::string toString(size_t value) {
+    return std::to_string(value);
+}
 std::string toString(bool value) {
     return value ? "true" : "false";
 }
@@ -96,17 +105,16 @@ std::string String::replace(const std::string& str, const std::string& from, con
     }
     return result;
 }
-std::vector<std::string> String::split(const std::string& str, const std::string& delimiter) {
-    std::vector<std::string> result;
-    size_t start = 0;
-    size_t end = str.find(delimiter);
-    while (end != std::string::npos) {
-        result.push_back(str.substr(start, end - start));
-        start = end + delimiter.length();
-        end = str.find(delimiter, start);
-    }
-    result.push_back(str.substr(start));
-    return result;
+Array<std::string> String::split(const std::string& str, const std::string& delimiter) {
+    std::vector<std::string> tokens;
+    size_t prev = 0, pos = 0;
+    do {
+        pos = str.find(delimiter, prev);
+        if (pos == std::string::npos) pos = str.length();
+        tokens.push_back(str.substr(prev, pos - prev));
+        prev = pos + delimiter.length();
+    } while (pos < str.length() && prev < str.length());
+    return Array<std::string>(tokens);
 }
 std::string String::trim(const std::string& str) {
     size_t start = str.find_first_not_of(" \t\n\r");

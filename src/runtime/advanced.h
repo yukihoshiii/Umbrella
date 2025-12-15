@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include "runtime.h"
 namespace umbrella {
 namespace runtime {
 class Database {
@@ -12,7 +13,7 @@ public:
     Database(const std::string& path);
     ~Database();
     void exec(const std::string& sql);
-    std::vector<std::map<std::string, std::string>> query(const std::string& sql);
+    Array<Map<std::string, std::string>> query(const std::string& sql);
     void prepare(const std::string& sql);
     void bind(int index, const std::string& value);
     void bind(int index, double value);
