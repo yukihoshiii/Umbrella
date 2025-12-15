@@ -21,9 +21,11 @@ private:
     std::unique_ptr<Statement> parseStatement();
     std::unique_ptr<Statement> parseVariableDeclaration();
     std::unique_ptr<Statement> parseFunctionDeclaration();
+    std::unique_ptr<Statement> parseClassDeclaration();
     std::unique_ptr<Statement> parseIfStatement();
     std::unique_ptr<Statement> parseWhileStatement();
     std::unique_ptr<Statement> parseForStatement();
+    std::unique_ptr<Statement> parseTryStatement();
     std::unique_ptr<Statement> parseReturnStatement();
     std::unique_ptr<Statement> parseBlockStatement();
     std::unique_ptr<Statement> parseExpressionStatement();

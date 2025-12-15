@@ -26,6 +26,8 @@ enum class TokenType {
     FROM,
     ASYNC,
     AWAIT,
+    TRY,
+    CATCH,
     TYPE_NUMBER,
     TYPE_STRING,
     TYPE_BOOLEAN,

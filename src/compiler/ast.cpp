@@ -101,6 +101,11 @@ std::string VariableDeclaration::toString() const {
     ss << ";";
     return ss.str();
 }
+
+std::string FunctionExpression::toString() const {
+    return "function (...) { ... }";
+}
+
 std::string FunctionDeclaration::toString() const {
     std::stringstream ss;
     ss << "function " << name << "(";
@@ -154,6 +159,14 @@ std::string ClassDeclaration::toString() const {
         ss << " extends " << superclass;
     }
     ss << " { ... }";
+    return ss.str();
+}
+std::string TryStatement::toString() const {
+    std::stringstream ss;
+    ss << "try { ... }";
+    if (!catchBlock.empty()) {
+        ss << " catch (" << catchVar << ") { ... }";
+    }
     return ss.str();
 }
 }  

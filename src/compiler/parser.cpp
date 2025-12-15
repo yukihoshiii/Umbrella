@@ -61,28 +61,31 @@ bool Parser::isAtEnd() {
     return peek().type == TokenType::END_OF_FILE;
 }
 std::unique_ptr<Statement> Parser::parseStatement() {
+    std::unique_ptr<Statement> stmt;
     if (match(TokenType::LET) || match(TokenType::CONST)) {
-        return parseVariableDeclaration();
+        stmt = parseVariableDeclaration();
+    } else if (match(TokenType::FUNCTION)) {
+        stmt = parseFunctionDeclaration();
+    } else if (match(TokenType::CLASS)) {
+        stmt = parseClassDeclaration();
+    } else if (match(TokenType::IF)) {
+        stmt = parseIfStatement();
+    } else if (match(TokenType::WHILE)) {
+        stmt = parseWhileStatement();
+    } else if (match(TokenType::FOR)) {
+        stmt = parseForStatement();
+    } else if (match(TokenType::RETURN)) {
+        stmt = parseReturnStatement();
+    } else if (match(TokenType::TRY)) {
+        stmt = parseTryStatement();
+    } else if (match(TokenType::LBRACE)) {
+        stmt = parseBlockStatement();
+    } else {
+        stmt = parseExpressionStatement();
     }
-    if (match(TokenType::FUNCTION)) {
-        return parseFunctionDeclaration();
-    }
-    if (match(TokenType::IF)) {
-        return parseIfStatement();
-    }
-    if (match(TokenType::WHILE)) {
-        return parseWhileStatement();
-    }
-    if (match(TokenType::FOR)) {
-        return parseForStatement();
-    }
-    if (match(TokenType::RETURN)) {
-        return parseReturnStatement();
-    }
-    if (match(TokenType::LBRACE)) {
-        return parseBlockStatement();
-    }
-    return parseExpressionStatement();
+    // Consume optional semicolon if present (e.g. after block/loop)
+    match(TokenType::SEMICOLON); 
+    return stmt;
 }
 std::unique_ptr<Statement> Parser::parseVariableDeclaration() {
     bool isConst = tokens[current - 1].type == TokenType::CONST;
@@ -124,6 +127,79 @@ std::unique_ptr<Statement> Parser::parseFunctionDeclaration() {
     consume(TokenType::RBRACE, "Expected '}' after function body");
     return func;
 }
+
+std::unique_ptr<Statement> Parser::parseClassDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expected class name");
+    auto classDecl = std::make_unique<ClassDeclaration>(name.value);
+    
+    if (match(TokenType::EXTENDS)) {
+        Token super = consume(TokenType::IDENTIFIER, "Expected superclass name");
+        classDecl->superclass = super.value;
+    }
+    
+    consume(TokenType::LBRACE, "Expected '{' before class body");
+    while (!check(TokenType::RBRACE) && !isAtEnd()) {
+        if (match(TokenType::CONSTRUCTOR)) {
+            consume(TokenType::LPAREN, "Expected '(' after constructor");
+            auto ctor = std::make_unique<ConstructorDeclaration>();
+            if (!check(TokenType::RPAREN)) {
+                do {
+                    Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
+                    Type paramType = Type::ANY;
+                    if (match(TokenType::COLON)) paramType = parseType();
+                    ctor->parameters.emplace_back(paramName.value, paramType);
+                } while (match(TokenType::COMMA));
+            }
+            consume(TokenType::RPAREN, "Expected ')' after parameters");
+            consume(TokenType::LBRACE, "Expected '{' before constructor body");
+            while (!check(TokenType::RBRACE) && !isAtEnd()) {
+                ctor->body.push_back(parseStatement());
+            }
+            consume(TokenType::RBRACE, "Expected '}' after constructor body");
+            classDecl->constructor = std::move(ctor);
+        } else {
+            Token memberName = consume(TokenType::IDENTIFIER, "Expected member name");
+            if (match(TokenType::LPAREN)) { // Method
+                Type retType = Type::VOID;
+                std::vector<FunctionParameter> params;
+                if (!check(TokenType::RPAREN)) {
+                    do {
+                        Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
+                        Type paramType = Type::ANY;
+                        if (match(TokenType::COLON)) paramType = parseType();
+                        params.emplace_back(paramName.value, paramType);
+                    } while (match(TokenType::COMMA));
+                }
+                consume(TokenType::RPAREN, "Expected ')' after parameters");
+                if (match(TokenType::COLON)) {
+                    retType = parseType();
+                }
+                auto method = MethodDeclaration(memberName.value, retType);
+                method.parameters = params;
+                consume(TokenType::LBRACE, "Expected '{' before method body");
+                while (!check(TokenType::RBRACE) && !isAtEnd()) {
+                    method.body.push_back(parseStatement());
+                }
+                consume(TokenType::RBRACE, "Expected '}' after method body");
+                classDecl->methods.push_back(std::move(method));
+            } else { // Field
+                Type fieldType = Type::ANY;
+                if (match(TokenType::COLON)) {
+                    fieldType = parseType();
+                }
+                std::unique_ptr<Expression> init = nullptr;
+                if (match(TokenType::EQUAL)) {
+                    init = parseExpression();
+                }
+                consume(TokenType::SEMICOLON, "Expected ';' after field declaration");
+                classDecl->members.emplace_back(memberName.value, fieldType, std::move(init));
+            }
+        }
+    }
+    consume(TokenType::RBRACE, "Expected '}' after class body");
+    return classDecl;
+}
+
 std::unique_ptr<Statement> Parser::parseIfStatement() {
     consume(TokenType::LPAREN, "Expected '(' after 'if'");
     auto condition = parseExpression();
@@ -207,11 +283,41 @@ std::unique_ptr<Statement> Parser::parseExpressionStatement() {
     consume(TokenType::SEMICOLON, "Expected ';' after expression");
     return std::make_unique<ExpressionStatement>(std::move(expr));
 }
+std::unique_ptr<Statement> Parser::parseTryStatement() {
+    auto tryStmt = std::make_unique<TryStatement>();
+    consume(TokenType::LBRACE, "Expected '{' before try body");
+    while (!check(TokenType::RBRACE) && !isAtEnd()) {
+        tryStmt->tryBlock.push_back(parseStatement());
+    }
+    consume(TokenType::RBRACE, "Expected '}' after try body");
+
+    if (match(TokenType::CATCH)) {
+        if (match(TokenType::LPAREN)) {
+            Token errorVar = consume(TokenType::IDENTIFIER, "Expected catch variable name");
+            tryStmt->catchVar = errorVar.value;
+            consume(TokenType::RPAREN, "Expected ')' after catch variable");
+        }
+        consume(TokenType::LBRACE, "Expected '{' before catch body");
+        while (!check(TokenType::RBRACE) && !isAtEnd()) {
+            tryStmt->catchBlock.push_back(parseStatement());
+        }
+        consume(TokenType::RBRACE, "Expected '}' after catch body");
+    }
+    return tryStmt;
+}
+
 std::unique_ptr<Expression> Parser::parseExpression() {
     return parseAssignment();
 }
 std::unique_ptr<Expression> Parser::parseAssignment() {
-    return parseLogicalOr();
+    auto expr = parseLogicalOr();
+    if (match({TokenType::EQUAL, TokenType::PLUS_EQUAL, TokenType::MINUS_EQUAL, 
+               TokenType::STAR_EQUAL, TokenType::SLASH_EQUAL})) {
+        std::string op = tokens[current - 1].value;
+        auto value = parseAssignment();
+        return std::make_unique<AssignmentExpression>(std::move(expr), op, std::move(value));
+    }
+    return expr;
 }
 std::unique_ptr<Expression> Parser::parseLogicalOr() {
     auto expr = parseLogicalAnd();
@@ -294,6 +400,10 @@ std::unique_ptr<Expression> Parser::parseCall() {
         } else if (match(TokenType::DOT)) {
             Token name = consume(TokenType::IDENTIFIER, "Expected property name after '.'");
             expr = std::make_unique<MemberExpression>(std::move(expr), name.value);
+        } else if (match(TokenType::LBRACKET)) {
+            auto index = parseExpression();
+            consume(TokenType::RBRACKET, "Expected ']' after index");
+            expr = std::make_unique<ArrayAccess>(std::move(expr), std::move(index));
         } else {
             break;
         }
@@ -317,6 +427,9 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     if (match(TokenType::IDENTIFIER)) {
         return std::make_unique<Identifier>(tokens[current - 1].value);
     }
+    if (match(TokenType::THIS)) {
+        return std::make_unique<Identifier>("this");
+    }
     if (match(TokenType::LPAREN)) {
         auto expr = parseExpression();
         consume(TokenType::RPAREN, "Expected ')' after expression");
@@ -327,6 +440,41 @@ std::unique_ptr<Expression> Parser::parsePrimary() {
     }
     if (match(TokenType::LBRACE)) {
         return parseMapLiteral();
+    }
+    if (match(TokenType::FUNCTION)) {
+        auto func = std::make_unique<FunctionExpression>();
+        consume(TokenType::LPAREN, "Expected '(' after function");
+        if (!check(TokenType::RPAREN)) {
+            do {
+                Token paramName = consume(TokenType::IDENTIFIER, "Expected parameter name");
+                Type paramType = Type::ANY;
+                if (match(TokenType::COLON)) paramType = parseType();
+                func->parameters.emplace_back(paramName.value, paramType);
+            } while (match(TokenType::COMMA));
+        }
+        consume(TokenType::RPAREN, "Expected ')' after parameters");
+        if (match(TokenType::COLON)) {
+            func->returnType = parseType();
+        }
+        consume(TokenType::LBRACE, "Expected '{' before function body");
+        while (!check(TokenType::RBRACE) && !isAtEnd()) {
+            func->body.push_back(parseStatement());
+        }
+        consume(TokenType::RBRACE, "Expected '}' after function body");
+        return func;
+    }
+    
+    if (match(TokenType::NEW)) {
+        Token className = consume(TokenType::IDENTIFIER, "Expected class name after 'new'");
+        auto newExpr = std::make_unique<NewExpression>(className.value);
+        consume(TokenType::LPAREN, "Expected '(' after class name");
+        if (!check(TokenType::RPAREN)) {
+            do {
+                newExpr->arguments.push_back(parseExpression());
+            } while (match(TokenType::COMMA));
+        }
+        consume(TokenType::RPAREN, "Expected ')' after arguments");
+        return newExpr;
     }
     error("Expected expression");
     return nullptr;
@@ -367,6 +515,37 @@ Type Parser::parseType() {
     if (match(TokenType::TYPE_STRING)) return Type::STRING;
     if (match(TokenType::TYPE_BOOLEAN)) return Type::BOOLEAN;
     if (match(TokenType::TYPE_VOID)) return Type::VOID;
+    if (match(TokenType::FUNCTION)) return Type::FUNCTION;
+    
+    if (match(TokenType::TYPE_ARRAY)) {
+        if (match(TokenType::LESS)) {
+            parseType();
+            consume(TokenType::GREATER, "Expected '>' after array element type");
+        }
+        return Type::ARRAY;
+    }
+
+    if (match(TokenType::LPAREN)) { // Function type: () => T
+        // Parse parameters if needed, for simplicity assumed empty or just (types)
+        // Simplified: consume until ) then =>
+        while (!check(TokenType::RPAREN) && !isAtEnd()) {
+            parseType(); 
+            match(TokenType::COMMA);
+        }
+        consume(TokenType::RPAREN, "Expected ')' in function type");
+        consume(TokenType::ARROW, "Expected '=>' after function type parameters");
+        parseType(); // Return type
+        return Type::FUNCTION;
+    }
+
+    if (match(TokenType::IDENTIFIER)) { // Custom types and Generics
+        if (match(TokenType::LESS)) {
+            parseType();
+            consume(TokenType::GREATER, "Expected '>' after generic type argument");
+        }
+        return Type::ANY; 
+    }
+    
     return Type::ANY;
 }
 void Parser::error(const std::string& message) {

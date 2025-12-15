@@ -27,6 +27,9 @@ std::string CodeGenerator::generateStatement(const Statement* stmt) {
     if (auto funcDecl = dynamic_cast<const FunctionDeclaration*>(stmt)) {
         return generateFunctionDeclaration(funcDecl);
     }
+    if (auto classDecl = dynamic_cast<const ClassDeclaration*>(stmt)) {
+        return generateClassDeclaration(classDecl);
+    }
     if (auto retStmt = dynamic_cast<const ReturnStatement*>(stmt)) {
         return generateReturnStatement(retStmt);
     }
@@ -41,6 +44,9 @@ std::string CodeGenerator::generateStatement(const Statement* stmt) {
     }
     if (auto blockStmt = dynamic_cast<const BlockStatement*>(stmt)) {
         return generateBlockStatement(blockStmt);
+    }
+    if (auto tryStmt = dynamic_cast<const TryStatement*>(stmt)) {
+        return generateTryStatement(tryStmt);
     }
     if (auto exprStmt = dynamic_cast<const ExpressionStatement*>(stmt)) {
         return generateExpressionStatement(exprStmt);
@@ -63,6 +69,9 @@ std::string CodeGenerator::generateExpression(const Expression* expr) {
     if (auto binExpr = dynamic_cast<const BinaryExpression*>(expr)) {
         return generateBinaryExpression(binExpr);
     }
+    if (auto assignExpr = dynamic_cast<const AssignmentExpression*>(expr)) {
+        return generateAssignmentExpression(assignExpr);
+    }
     if (auto unExpr = dynamic_cast<const UnaryExpression*>(expr)) {
         return generateUnaryExpression(unExpr);
     }
@@ -75,11 +84,69 @@ std::string CodeGenerator::generateExpression(const Expression* expr) {
     if (auto memExpr = dynamic_cast<const MemberExpression*>(expr)) {
         return generateMemberExpression(memExpr);
     }
+    if (auto accessExpr = dynamic_cast<const ArrayAccess*>(expr)) {
+        return generateArrayAccess(accessExpr);
+    }
     if (auto mapLit = dynamic_cast<const MapLiteral*>(expr)) {
         return generateMapLiteral(mapLit);
     }
+    if (auto newExpr = dynamic_cast<const NewExpression*>(expr)) {
+        return generateNewExpression(newExpr);
+    }
+    if (auto funcExpr = dynamic_cast<const FunctionExpression*>(expr)) {
+        return generateFunctionExpression(funcExpr);
+    }
     return "";
 }
+
+std::string CodeGenerator::generateTryStatement(const TryStatement* stmt) {
+    std::stringstream ss;
+    ss << indent() << "try {\n";
+    indentLevel++;
+    for (const auto& s : stmt->tryBlock) {
+        ss << generateStatement(s.get());
+    }
+    indentLevel--;
+    ss << indent() << "}";
+    
+    if (!stmt->catchBlock.empty()) {
+        ss << " catch (const std::exception& e) {\n";
+        indentLevel++;
+        if (!stmt->catchVar.empty() && stmt->catchVar != "e") {
+           ss << indent() << "std::string " << stmt->catchVar << " = " << "e.what();\n";
+        }
+        for (const auto& s : stmt->catchBlock) {
+            ss << generateStatement(s.get());
+        }
+        indentLevel--;
+        ss << indent() << "}\n";
+    } else {
+        ss << "\n"; 
+    }
+    return ss.str();
+}
+
+std::string CodeGenerator::generateAssignmentExpression(const AssignmentExpression* expr) {
+    std::stringstream ss;
+    ss << generateExpression(expr->left.get()) << " " << expr->op << " " << generateExpression(expr->right.get());
+    return ss.str();
+}
+
+std::string CodeGenerator::generateNewExpression(const NewExpression* expr) {
+    std::stringstream ss;
+    ss << expr->className << "(";
+    for (size_t i = 0; i < expr->arguments.size(); i++) {
+        if (i > 0) ss << ", ";
+        ss << generateExpression(expr->arguments[i].get());
+    }
+    ss << ")";
+    return ss.str();
+}
+
+std::string CodeGenerator::generateArrayAccess(const ArrayAccess* expr) {
+    return generateExpression(expr->array.get()) + "[" + generateExpression(expr->index.get()) + "]";
+}
+
 std::string CodeGenerator::generateMapLiteral(const MapLiteral* expr) {
     std::stringstream ss;
     std::string valueType = typeToCppType(expr->valueType);
@@ -104,6 +171,14 @@ std::string CodeGenerator::generateMemberExpression(const MemberExpression* expr
             if (id->name == className) {
                 return className + "::" + expr->property;
             }
+        }
+    }
+    if (expr->property == "length") {
+        return generateExpression(expr->object.get()) + ".length()";
+    }
+    if (auto id = dynamic_cast<const Identifier*>(expr->object.get())) {
+        if (id->name == "this") {
+            return "this->" + expr->property;
         }
     }
     return generateExpression(expr->object.get()) + "." + expr->property;
@@ -143,6 +218,79 @@ std::string CodeGenerator::generateFunctionDeclaration(const FunctionDeclaration
     ss << indent() << "}\n\n";
     return ss.str();
 }
+
+std::string CodeGenerator::generateFunctionExpression(const FunctionExpression* expr) {
+    std::stringstream ss;
+    ss << "[&](";
+    for (size_t i = 0; i < expr->parameters.size(); i++) {
+        if (i > 0) ss << ", ";
+        ss << typeToCppType(expr->parameters[i].type) << " " << expr->parameters[i].name;
+    }
+    ss << ") -> " << typeToCppType(expr->returnType) << " {\n";
+    indentLevel++;
+    for (const auto& stmt : expr->body) {
+        ss << generateStatement(stmt.get());
+    }
+    indentLevel--;
+    ss << indent() << "}";
+    return ss.str();
+}
+
+std::string CodeGenerator::generateClassDeclaration(const ClassDeclaration* decl) {
+    std::stringstream ss;
+    ss << indent() << "struct " << decl->name;
+    if (!decl->superclass.empty()) {
+        ss << " : public " << decl->superclass;
+    }
+    ss << " {\n";
+    indentLevel++;
+    
+    // Fields
+    for (const auto& member : decl->members) {
+        ss << indent() << typeToCppType(member.type) << " " << member.name;
+        if (member.initializer) {
+            ss << " = " << generateExpression(member.initializer.get());
+        }
+        ss << ";\n";
+    }
+
+    // Constructor
+    if (decl->constructor) {
+        ss << "\n" << indent() << decl->name << "(";
+        for (size_t i = 0; i < decl->constructor->parameters.size(); i++) {
+            if (i > 0) ss << ", ";
+            ss << typeToCppType(decl->constructor->parameters[i].type) << " " << decl->constructor->parameters[i].name;
+        }
+        ss << ") {\n";
+        indentLevel++;
+        for (const auto& stmt : decl->constructor->body) {
+            ss << generateStatement(stmt.get());
+        }
+        indentLevel--;
+        ss << indent() << "}\n";
+    }
+
+    // Methods
+    for (const auto& method : decl->methods) {
+        ss << "\n" << indent() << typeToCppType(method.returnType) << " " << method.name << "(";
+        for (size_t i = 0; i < method.parameters.size(); i++) {
+            if (i > 0) ss << ", ";
+            ss << typeToCppType(method.parameters[i].type) << " " << method.parameters[i].name;
+        }
+        ss << ") {\n";
+        indentLevel++;
+        for (const auto& stmt : method.body) {
+            ss << generateStatement(stmt.get());
+        }
+        indentLevel--;
+        ss << indent() << "}\n";
+    }
+
+    indentLevel--;
+    ss << indent() << "};\n\n";
+    return ss.str();
+}
+
 std::string CodeGenerator::generateReturnStatement(const ReturnStatement* stmt) {
     std::stringstream ss;
     ss << indent() << "return";

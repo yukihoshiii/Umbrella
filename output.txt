@@ -1,0 +1,82 @@
+Reading source file: examples/database.umb
+Lexical analysis...
+Generated 216 tokens
+Parsing...
+Parse error: Parse error at line 9: Expected ';' after variable declaration
+Parse error: Parse error at line 11: Expected ')' after for clauses
+Parse error: Parse error at line 14: Expected expression
+Parse error: Parse error at line 16: Expected ';' after expression
+Parse error: Parse error at line 21: Expected expression
+Parse error: Parse error at line 24: Expected expression
+Parse error: Parse error at line 27: Expected expression
+AST generated successfully
+Generating C++ code...
+Generated C++ code:
+-------------------
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+#include "runtime/runtime.h"
+#include "runtime/advanced.h"
+
+using namespace umbrella::runtime;
+
+std::cout << std::string("\\nUsers older than 25:") << std::endl;
+std::cout << ((((std::string("  ") + row.get(std::string("name"))) + std::string(" (")) + row.get(std::string("age"))) + std::string(")")) << std::endl;
+db.exec(std::string("UPDATE users SET age = age + 1 WHERE name = 'Bob'"));
+db.commit();
+std::cout << std::string("\\nTransaction committed") << std::endl;
+std::cout << (std::string("Transaction rolled back: ") + error) << std::endl;
+return 0.000000;
+
+int main() {
+    return 0;
+}
+-------------------
+Compiling to native code...
+/tmp/umbrella_temp_6855653697176169824.cpp:13:6: error: no type named 'cout' in namespace 'std'
+   13 | std::cout << std::string("\\nUsers older than 25:") << std::endl;
+      | ~~~~~^
+/tmp/umbrella_temp_6855653697176169824.cpp:13:11: error: expected unqualified-id
+   13 | std::cout << std::string("\\nUsers older than 25:") << std::endl;
+      |           ^
+/tmp/umbrella_temp_6855653697176169824.cpp:14:6: error: no type named 'cout' in namespace 'std'
+   14 | std::cout << ((((std::string("  ") + row.get(std::string("name"))) + std::string(" (")) + row.get(std::string("age"))) + std::string(")")) << std::endl;
+      | ~~~~~^
+/tmp/umbrella_temp_6855653697176169824.cpp:14:11: error: expected unqualified-id
+   14 | std::cout << ((((std::string("  ") + row.get(std::string("name"))) + std::string(" (")) + row.get(std::string("age"))) + std::string(")")) << std::endl;
+      |           ^
+/tmp/umbrella_temp_6855653697176169824.cpp:15:1: error: unknown type name 'db'
+   15 | db.exec(std::string("UPDATE users SET age = age + 1 WHERE name = 'Bob'"));
+      | ^
+/tmp/umbrella_temp_6855653697176169824.cpp:15:3: error: cannot use dot operator on a type
+   15 | db.exec(std::string("UPDATE users SET age = age + 1 WHERE name = 'Bob'"));
+      |   ^
+/tmp/umbrella_temp_6855653697176169824.cpp:16:1: error: unknown type name 'db'
+   16 | db.commit();
+      | ^
+/tmp/umbrella_temp_6855653697176169824.cpp:16:3: error: cannot use dot operator on a type
+   16 | db.commit();
+      |   ^
+/tmp/umbrella_temp_6855653697176169824.cpp:17:6: error: no type named 'cout' in namespace 'std'
+   17 | std::cout << std::string("\\nTransaction committed") << std::endl;
+      | ~~~~~^
+/tmp/umbrella_temp_6855653697176169824.cpp:17:11: error: expected unqualified-id
+   17 | std::cout << std::string("\\nTransaction committed") << std::endl;
+      |           ^
+/tmp/umbrella_temp_6855653697176169824.cpp:18:6: error: no type named 'cout' in namespace 'std'
+   18 | std::cout << (std::string("Transaction rolled back: ") + error) << std::endl;
+      | ~~~~~^
+/tmp/umbrella_temp_6855653697176169824.cpp:18:11: error: expected unqualified-id
+   18 | std::cout << (std::string("Transaction rolled back: ") + error) << std::endl;
+      |           ^
+/tmp/umbrella_temp_6855653697176169824.cpp:19:1: error: expected unqualified-id
+   19 | return 0.000000;
+      | ^
+13 errors generated.
+Compile command: g++ -std=c++17 -O3 -I/Users/yuki/umbrella/build/../src /tmp/umbrella_temp_6855653697176169824.cpp /Users/yuki/umbrella/build/../src/runtime/runtime.cpp /Users/yuki/umbrella/build/../src/runtime/advanced.cpp -o /Users/yuki/.umbrella/cache/6855653697176169824 -lsqlite3 
+Error: Compilation failed

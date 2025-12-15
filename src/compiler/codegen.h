@@ -11,12 +11,17 @@ public:
 private:
     std::string generateStatement(const Statement* stmt);
     std::string generateExpression(const Expression* expr);
+    std::string generateAssignmentExpression(const AssignmentExpression* expr);
+    std::string generateArrayAccess(const ArrayAccess* expr);
     std::string generateVariableDeclaration(const VariableDeclaration* decl);
     std::string generateFunctionDeclaration(const FunctionDeclaration* decl);
+    std::string generateFunctionExpression(const FunctionExpression* expr);
+    std::string generateClassDeclaration(const ClassDeclaration* decl);
     std::string generateReturnStatement(const ReturnStatement* stmt);
     std::string generateIfStatement(const IfStatement* stmt);
     std::string generateWhileStatement(const WhileStatement* stmt);
     std::string generateForStatement(const ForStatement* stmt);
+    std::string generateTryStatement(const TryStatement* stmt);
     std::string generateBlockStatement(const BlockStatement* stmt);
     std::string generateExpressionStatement(const ExpressionStatement* stmt);
     std::string generateNumberLiteral(const NumberLiteral* expr);
@@ -29,6 +34,7 @@ private:
     std::string generateArrayExpression(const ArrayExpression* expr);
     std::string generateMapLiteral(const MapLiteral* expr);
     std::string generateMemberExpression(const MemberExpression* expr);
+    std::string generateNewExpression(const NewExpression* expr);
     std::string typeToCppType(Type type);
     std::string escapeString(const std::string& str);
     int indentLevel;

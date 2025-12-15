@@ -11,18 +11,29 @@
 #include <sqlite3.h>
 namespace umbrella {
 namespace runtime {
-Database::Database(const std::string& path) : dbPath(path), db(nullptr) {
-    if (sqlite3_open(path.c_str(), (sqlite3**)&db) != SQLITE_OK) {
-        std::cerr << "Can't open database: " << sqlite3_errmsg((sqlite3*)db) << std::endl;
+Database::Database(const std::string& path) : dbPath(path) {
+    sqlite3* rawDb = nullptr;
+    if (sqlite3_open(path.c_str(), &rawDb) != SQLITE_OK) {
+        std::cerr << "Can't open database: " << sqlite3_errmsg(rawDb) << std::endl;
+        // Even if open fails, we might need to close if handle was allocated
+        if (rawDb) sqlite3_close(rawDb);
         db = nullptr;
+    } else {
+        // Use shared_ptr with custom deleter to close sqlite3 handle
+        db = std::shared_ptr<void>(rawDb, [](void* ptr) {
+            if (ptr) {
+                sqlite3_close((sqlite3*)ptr);
+            }
+        });
     }
 }
-Database::~Database() {
-    close();
-}
+
+// Destructor removed as shared_ptr handles cleanup
+
 void Database::exec(const std::string& sql) {
+    if (!db) return;
     char* errMsg = 0;
-    if (sqlite3_exec((sqlite3*)db, sql.c_str(), 0, 0, &errMsg) != SQLITE_OK) {
+    if (sqlite3_exec((sqlite3*)db.get(), sql.c_str(), 0, 0, &errMsg) != SQLITE_OK) {
         std::cerr << "SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
     }
@@ -30,8 +41,10 @@ void Database::exec(const std::string& sql) {
 
 Array<Map<std::string, std::string>> Database::query(const std::string& sql) {
     std::vector<Map<std::string, std::string>> results;
+    if (!db) return Array<Map<std::string, std::string>>(results);
+    
     sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2((sqlite3*)db, sql.c_str(), -1, &stmt, 0) == SQLITE_OK) {
+    if (sqlite3_prepare_v2((sqlite3*)db.get(), sql.c_str(), -1, &stmt, 0) == SQLITE_OK) {
         int cols = sqlite3_column_count(stmt);
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             std::map<std::string, std::string> rowData;
@@ -56,16 +69,16 @@ void Database::rollback() {
     exec("ROLLBACK");
 }
 int Database::lastInsertId() {
-    return (int)sqlite3_last_insert_rowid((sqlite3*)db);
+    if (!db) return 0;
+    return (int)sqlite3_last_insert_rowid((sqlite3*)db.get());
 }
 int Database::changes() {
-    return sqlite3_changes((sqlite3*)db);
+    if (!db) return 0;
+    return sqlite3_changes((sqlite3*)db.get());
 }
 void Database::close() {
-    if (db) {
-        sqlite3_close((sqlite3*)db);
-        db = nullptr;
-    }
+    // Resetting the shared_ptr will trigger the deleter if this is the last reference
+    db.reset();
 }
 Thread Thread::spawn(void (*func)()) {
     Thread t;

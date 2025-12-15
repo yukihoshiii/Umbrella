@@ -21,6 +21,8 @@ std::map<std::string, TokenType> Lexer::keywords = {
     {"from", TokenType::FROM},
     {"async", TokenType::ASYNC},
     {"await", TokenType::AWAIT},
+    {"try", TokenType::TRY},
+    {"catch", TokenType::CATCH},
     {"true", TokenType::TRUE},
     {"false", TokenType::FALSE},
     {"number", TokenType::TYPE_NUMBER},

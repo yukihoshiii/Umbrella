@@ -157,16 +157,29 @@ public:
     Type type;
     FunctionParameter(const std::string& n, Type t) : name(n), type(t) {}
 };
+
+class FunctionExpression : public Expression {
+public:
+    std::vector<FunctionParameter> parameters;
+    Type returnType;
+    std::vector<std::unique_ptr<Statement>> body;
+    FunctionExpression(Type ret = Type::VOID) : returnType(ret) {}
+    std::string toString() const override;
+};
+
 class FunctionDeclaration : public Statement {
 public:
     std::string name;
     std::vector<FunctionParameter> parameters;
     Type returnType;
     std::vector<std::unique_ptr<Statement>> body;
-    FunctionDeclaration(const std::string& n, Type ret)
-        : name(n), returnType(ret) {}
+
+    FunctionDeclaration(const std::string& n, Type retType = Type::VOID)
+        : name(n), returnType(retType) {}
+    
     std::string toString() const override;
 };
+class ClassDeclaration; // Forward declare
 class ReturnStatement : public Statement {
 public:
     std::unique_ptr<Expression> value;
@@ -189,6 +202,14 @@ public:
     std::vector<std::unique_ptr<Statement>> body;
     WhileStatement(std::unique_ptr<Expression> cond)
         : condition(std::move(cond)) {}
+    std::string toString() const override;
+};
+class TryStatement : public Statement {
+public:
+    std::vector<std::unique_ptr<Statement>> tryBlock;
+    std::string catchVar;
+    std::vector<std::unique_ptr<Statement>> catchBlock;
+    TryStatement(const std::string& errorVar = "") : catchVar(errorVar) {}
     std::string toString() const override;
 };
 class ForStatement : public Statement {

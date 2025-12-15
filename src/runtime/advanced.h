@@ -8,10 +8,10 @@ namespace umbrella {
 namespace runtime {
 class Database {
 public:
-    void* db;   
+    std::shared_ptr<void> db;   
     std::string dbPath;
     Database(const std::string& path);
-    ~Database();
+    // Destructor removed as shared_ptr handles cleanup
     void exec(const std::string& sql);
     Array<Map<std::string, std::string>> query(const std::string& sql);
     void prepare(const std::string& sql);
