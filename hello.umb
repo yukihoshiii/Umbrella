@@ -1,4 +1,0 @@
-function main(): number {
-    println("Hello World");
-    return 0;
-}
