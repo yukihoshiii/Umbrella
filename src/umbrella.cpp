@@ -222,7 +222,7 @@ int main(int argc, char* argv[]) {
         std::string targetBinary = (run && outputFile == "a.out") ? cachedBinary : outputFile;
 
         std::stringstream compileCmd;
-        compileCmd << "g++ -std=c++17 -O3 "; // Optimization on by default
+        compileCmd << "g++ -std=c++20 -O3 "; // Optimization on by default
         compileCmd << "-I" << includeDir << " ";
         compileCmd << cppFile << " ";
         compileCmd << runtimePath << " ";

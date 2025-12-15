@@ -167,6 +167,12 @@ std::string TryStatement::toString() const {
     if (!catchBlock.empty()) {
         ss << " catch (" << catchVar << ") { ... }";
     }
+    if (!finallyBlock.empty()) {
+        ss << " finally { ... }";
+    }
     return ss.str();
+}
+std::string ThrowStatement::toString() const {
+    return "throw " + expression->toString() + ";";
 }
 }  

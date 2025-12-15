@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(Umbrella VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Build type
@@ -35,7 +35,7 @@ include_directories(${SQLITE3_INCLUDE_DIRS})
 target_link_libraries(umbrella Threads::Threads sqlite3)
 
 # Set C++ standard
-target_compile_features(umbrella PRIVATE cxx_std_17)
+target_compile_features(umbrella PRIVATE cxx_std_20)
 
 # Include directories
 target_include_directories(umbrella PRIVATE

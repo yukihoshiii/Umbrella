@@ -28,6 +28,8 @@ enum class TokenType {
     AWAIT,
     TRY,
     CATCH,
+    FINALLY,
+    THROW,
     TYPE_NUMBER,
     TYPE_STRING,
     TYPE_BOOLEAN,

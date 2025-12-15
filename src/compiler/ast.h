@@ -144,11 +144,12 @@ class VariableDeclaration : public Statement {
 public:
     std::string name;
     Type varType;
+    std::string cppType; // Preserved C++ type string
     std::unique_ptr<Expression> initializer;
     bool isConst;
     VariableDeclaration(const std::string& n, Type t, 
-                       std::unique_ptr<Expression> init, bool constant = false)
-        : name(n), varType(t), initializer(std::move(init)), isConst(constant) {}
+                       std::unique_ptr<Expression> init, bool constant = false, std::string explicitType = "")
+        : name(n), varType(t), cppType(explicitType), initializer(std::move(init)), isConst(constant) {}
     std::string toString() const override;
 };
 class FunctionParameter {
@@ -163,7 +164,7 @@ public:
     std::vector<FunctionParameter> parameters;
     Type returnType;
     std::vector<std::unique_ptr<Statement>> body;
-    FunctionExpression(Type ret = Type::VOID) : returnType(ret) {}
+    FunctionExpression(Type ret = Type::ANY) : returnType(ret) {}
     std::string toString() const override;
 };
 
@@ -174,7 +175,7 @@ public:
     Type returnType;
     std::vector<std::unique_ptr<Statement>> body;
 
-    FunctionDeclaration(const std::string& n, Type retType = Type::VOID)
+    FunctionDeclaration(const std::string& n, Type retType = Type::ANY)
         : name(n), returnType(retType) {}
     
     std::string toString() const override;
@@ -209,7 +210,14 @@ public:
     std::vector<std::unique_ptr<Statement>> tryBlock;
     std::string catchVar;
     std::vector<std::unique_ptr<Statement>> catchBlock;
+    std::vector<std::unique_ptr<Statement>> finallyBlock; // Added
     TryStatement(const std::string& errorVar = "") : catchVar(errorVar) {}
+    std::string toString() const override;
+};
+class ThrowStatement : public Statement {
+public:
+    std::unique_ptr<Expression> expression;
+    ThrowStatement(std::unique_ptr<Expression> expr) : expression(std::move(expr)) {}
     std::string toString() const override;
 };
 class ForStatement : public Statement {

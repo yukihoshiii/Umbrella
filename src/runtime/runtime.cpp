@@ -17,6 +17,11 @@ void println(const std::string& message) {
     std::cout << message << std::endl;
 }
 std::string toString(double value) {
+    // If value is effectively an integer, print as integer
+    double intPart;
+    if (std::modf(value, &intPart) == 0.0) {
+        return std::to_string((long long)value);
+    }
     std::ostringstream ss;
     ss << value;
     return ss.str();
@@ -285,7 +290,7 @@ bool Regex::test(const std::string& str) const {
     std::regex re(pattern);
     return std::regex_search(str, re);
 }
-std::vector<std::string> Regex::match(const std::string& str) const {
+Array<std::string> Regex::match(const std::string& str) const {
     std::vector<std::string> result;
     std::regex re(pattern);
     std::smatch matches;
@@ -294,9 +299,9 @@ std::vector<std::string> Regex::match(const std::string& str) const {
             result.push_back(match.str());
         }
     }
-    return result;
+    return Array<std::string>(result);
 }
-std::vector<std::string> Regex::findAll(const std::string& str) const {
+Array<std::string> Regex::findAll(const std::string& str) const {
     std::vector<std::string> result;
     std::regex re(pattern);
     std::sregex_iterator it(str.begin(), str.end(), re);
@@ -305,7 +310,7 @@ std::vector<std::string> Regex::findAll(const std::string& str) const {
         result.push_back(it->str());
         ++it;
     }
-    return result;
+    return Array<std::string>(result);
 }
 std::string Regex::replace(const std::string& str, const std::string& replacement) const {
     std::regex re(pattern);
