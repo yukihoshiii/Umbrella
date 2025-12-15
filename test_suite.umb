@@ -1,0 +1,56 @@
+function main(): number {
+    println("--- Test Suite Start ---");
+
+    // 1. Math
+    println("[Math]");
+    println("sqrt(16): " + toString(Math.sqrt(16)));
+    println("max(10, 20): " + toString(Math.max(10, 20)));
+    println("PI: " + toString(Math.PI));
+
+    // 2. String
+    println("\n[String]");
+    let s: string = "Hello, Umbrella";
+    println("Original: " + s);
+    println("Upper: " + String.toUpperCase(s));
+    println("Substring(0, 5): " + String.substring(s, 0, 5));
+    let parts = String.split(s, ", ");
+    println("Split length: " + toString(parts.length()));
+    println("Part 1: " + parts.at(0));
+    println("Part 2: " + parts.at(1));
+
+    // 3. File
+    println("\n[File]");
+    let testFile: string = "test_file.txt";
+    File.writeFile(testFile, "Hello File System");
+    if (File.exists(testFile)) {
+        println("File created.");
+        println("Content: " + File.readFile(testFile));
+        File.deleteFile(testFile);
+        println("File deleted.");
+    } else {
+        println("File creation failed.");
+    }
+
+    // 4. Env
+    println("\n[Env]");
+    let home: string = Env.home();
+    if (String.length(home) > 0) {
+        println("Home dir found.");
+    } else {
+        println("Home dir not found.");
+    }
+
+    // 5. HTTP (Requires internet, hopefully curl exists)
+    println("\n[HTTP]");
+    // We use a likely stable URL, or skip if risky. Let's try example.com
+    // HTTP.get blocks? Yes, logically synchronously based on implementation.
+    // let resp = HTTP.get("https://www.example.com");
+    // println("Response Code: " + toString(resp.statusCode));
+    // We comment this out to avoid hanging if no internet or issues, unless we're confident. 
+    // The user said "verify functionality". Let's try it.
+    let resp = HTTP.get("http://example.com");
+    println("GET example.com code: " + toString(resp.statusCode));
+
+    println("\n--- Test Suite End ---");
+    return 0;
+}
