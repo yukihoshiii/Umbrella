@@ -39,9 +39,9 @@ void Database::exec(const std::string& sql) {
     }
 }
 
-Array<Map<std::string, std::string>> Database::query(const std::string& sql) {
-    std::vector<Map<std::string, std::string>> results;
-    if (!db) return Array<Map<std::string, std::string>>(results);
+Array<Row> Database::query(const std::string& sql) {
+    std::vector<Row> results;
+    if (!db) return Array<Row>(results);
     
     sqlite3_stmt* stmt;
     if (sqlite3_prepare_v2((sqlite3*)db.get(), sql.c_str(), -1, &stmt, 0) == SQLITE_OK) {
@@ -53,11 +53,78 @@ Array<Map<std::string, std::string>> Database::query(const std::string& sql) {
                 const char* val = (const char*)sqlite3_column_text(stmt, i);
                 rowData[name ? name : ""] = val ? val : "";
             }
-            results.push_back(Map<std::string, std::string>(rowData));
+            Row row;
+            row.data = Map<std::string, std::string>(rowData);
+            results.push_back(row);
         }
     }
     sqlite3_finalize(stmt);
-    return Array<Map<std::string, std::string>>(results);
+    return Array<Row>(results);
+}
+
+void Database::prepare(const std::string& sql) {
+    if (!db) return;
+
+    // Finalize any existing statement first
+    finalize();
+
+    sqlite3_stmt* rawStmt = nullptr;
+    if (sqlite3_prepare_v2((sqlite3*)db.get(), sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
+        std::cerr << "SQL prepare error: " << sqlite3_errmsg((sqlite3*)db.get()) << std::endl;
+        if (rawStmt) {
+            sqlite3_finalize(rawStmt);
+        }
+        return;
+    }
+
+    // Manage statement lifetime with shared_ptr deleter
+    stmtHandle = std::shared_ptr<void>(rawStmt, [](void* ptr) {
+        if (ptr) {
+            sqlite3_finalize((sqlite3_stmt*)ptr);
+        }
+    });
+}
+
+void Database::bind(int index, const std::string& value) {
+    if (!stmtHandle) return;
+    sqlite3_stmt* stmt = (sqlite3_stmt*)stmtHandle.get();
+    sqlite3_bind_text(stmt, index, value.c_str(), -1, SQLITE_TRANSIENT);
+}
+
+void Database::bind(int index, double value) {
+    if (!stmtHandle) return;
+    sqlite3_stmt* stmt = (sqlite3_stmt*)stmtHandle.get();
+    sqlite3_bind_double(stmt, index, value);
+}
+
+void Database::bind(int index, int value) {
+    if (!stmtHandle) return;
+    sqlite3_stmt* stmt = (sqlite3_stmt*)stmtHandle.get();
+    sqlite3_bind_int(stmt, index, value);
+}
+
+bool Database::step() {
+    if (!stmtHandle) return false;
+    sqlite3_stmt* stmt = (sqlite3_stmt*)stmtHandle.get();
+    int rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        return true; // row available
+    }
+    if (rc != SQLITE_DONE) {
+        std::cerr << "SQL step error: " << sqlite3_errmsg((sqlite3*)db.get()) << std::endl;
+    }
+    return false;
+}
+
+void Database::reset() {
+    if (!stmtHandle) return;
+    sqlite3_stmt* stmt = (sqlite3_stmt*)stmtHandle.get();
+    sqlite3_reset(stmt);
+}
+
+void Database::finalize() {
+    // Resetting shared_ptr will call sqlite3_finalize via deleter
+    stmtHandle.reset();
 }
 void Database::beginTransaction() {
     exec("BEGIN TRANSACTION");
@@ -80,7 +147,7 @@ void Database::close() {
     // Resetting the shared_ptr will trigger the deleter if this is the last reference
     db.reset();
 }
-Thread Thread::spawn(void (*func)()) {
+Thread Thread::spawn(std::function<void()> func) {
     Thread t;
     t.handle = new std::thread(func);
     return t;
@@ -143,6 +210,10 @@ Process Process::spawn(const std::string& cmd, const std::vector<std::string>& a
     }
     return p;
 }
+Process Process::spawn(const std::string& cmd, const Array<std::string>& args) {
+    return spawn(cmd, args.data);
+}
+
 std::string Process::stdout() {
     return "";
 }
@@ -165,13 +236,13 @@ bool Process::isRunning() {
 void Timer::sleep(int milliseconds) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
-void Timer::setTimeout(void (*callback)(), int milliseconds) {
+void Timer::setTimeout(std::function<void()> callback, int milliseconds) {
     std::thread([callback, milliseconds]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
         callback();
     }).detach();
 }
-void Timer::setInterval(void (*callback)(), int milliseconds) {
+void Timer::setInterval(std::function<void()> callback, int milliseconds) {
     std::thread([callback, milliseconds]() {
         while (true) {
             std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));

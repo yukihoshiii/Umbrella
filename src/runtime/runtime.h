@@ -16,6 +16,11 @@ std::string toString(long long value);
 std::string toString(size_t value);
 std::string toString(bool value);
 double toNumber(const std::string& str);
+
+// Forward declaration so Math helpers can accept Array<T>
+template<typename T>
+class Array;
+
 namespace Math {
     double sqrt(double x);
     double pow(double base, double exponent);
@@ -28,6 +33,35 @@ namespace Math {
     double random();  
     const double PI = 3.14159265358979323846;
     const double E = 2.71828182845904523536;
+
+    // Aggregate helpers for numeric arrays (e.g. Math::max(nums))
+    template<typename T>
+    T max(const Array<T>& arr) {
+        if (arr.data.empty()) {
+            throw std::runtime_error("Math::max() called on empty array");
+        }
+        T current = arr.data[0];
+        for (size_t i = 1; i < arr.data.size(); ++i) {
+            if (arr.data[i] > current) {
+                current = arr.data[i];
+            }
+        }
+        return current;
+    }
+
+    template<typename T>
+    T min(const Array<T>& arr) {
+        if (arr.data.empty()) {
+            throw std::runtime_error("Math::min() called on empty array");
+        }
+        T current = arr.data[0];
+        for (size_t i = 1; i < arr.data.size(); ++i) {
+            if (arr.data[i] < current) {
+                current = arr.data[i];
+            }
+        }
+        return current;
+    }
 }
 
 template<typename T>
@@ -225,19 +259,28 @@ public:
     void clear() {
         data.clear();
     }
-    std::vector<K> keys() const {
+    Array<K> keys() const {
         std::vector<K> result;
         for (const auto& pair : data) {
             result.push_back(pair.first);
         }
-        return result;
+        return Array<K>(result);
     }
-    std::vector<V> values() const {
+    Array<V> values() const {
         std::vector<V> result;
         for (const auto& pair : data) {
             result.push_back(pair.second);
         }
-        return result;
+        return Array<V>(result);
+    }
+};
+
+// Simple row type used by Database::query
+struct Row {
+    Map<std::string, std::string> data;
+
+    std::string get(const std::string& column) const {
+        return data.get(column);
     }
 };
 class Date {
@@ -287,8 +330,8 @@ public:
     std::string pattern;
     Regex(const std::string& pat);
     bool test(const std::string& str) const;
-    std::vector<std::string> match(const std::string& str) const;
-    std::vector<std::string> findAll(const std::string& str) const;
+    Array<std::string> match(const std::string& str) const;
+    Array<std::string> findAll(const std::string& str) const;
     std::string replace(const std::string& str, const std::string& replacement) const;
 };
 class Env {
